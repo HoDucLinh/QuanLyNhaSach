@@ -100,7 +100,7 @@ class Cart(db.Model):
 class CartDetail(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
-    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
+    cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
     quantity = db.Column(db.Integer , nullable=False)
 
 
