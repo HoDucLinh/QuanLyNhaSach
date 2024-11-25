@@ -1,0 +1,89 @@
+{%extends 'layout/main.html'%}
+
+{%block content%}
+<div class="sidebar">
+    <h3 class="text-center mb-4">Account Menu</h3>
+    <a href="#" class="active">
+        <i class="menu-icon fa fa-history"></i> Order History
+    </a>
+    <a href="#">
+        <i class="menu-icon fa fa-user"></i> Manage Profile
+    </a>
+    <a href="#">
+        <i class="menu-icon fa fa-heart"></i> Saved Items
+    </a>
+    <a href="#">
+        <i class="menu-icon fa fa-star"></i> Wishlist
+    </a>
+    <a href="#">
+        <i class="menu-icon fa fa-headset"></i> Support
+    </a>
+    <a href="#">
+        <i class="menu-icon fa fa-sign-out-alt"></i> Logout
+    </a>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+    <h2 class="menu-title mb-4">My Account</h2>
+
+    <div class="row g-4">
+        <!-- My Orders -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <i class="menu-icon fa fa-shopping-cart text-primary fs-1 me-3"></i>
+                    <div>
+                        <h5 class="card-title">My Orders</h5>
+                        <p class="card-text mb-2">Check your order history and track current orders.</p>
+                        <a href="#" class="btn btn-primary btn-sm">View Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <i class="menu-icon fa fa-user text-primary fs-1 me-3"></i>
+                    <div>
+                        <h5 class="card-title">Edit Profile</h5>
+                        <p class="card-text mb-2">Update your account information and preferences.</p>
+                        <a href="#" class="btn btn-primary btn-sm">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wishlist -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <i class="menu-icon fa fa-star text-primary fs-1 me-3"></i>
+                    <div>
+                        <h5 class="card-title">My Wishlist</h5>
+                        <p class="card-text mb-2">Browse and manage your favorite books.</p>
+                        <a href="#" class="btn btn-primary btn-sm">View Wishlist</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Support -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <i class="menu-icon fa fa-headset text-primary fs-1 me-3"></i>
+                    <div>
+                        <h5 class="card-title">Contact Support</h5>
+                        <p class="card-text mb-2">Need help? Reach out to our support team.</p>
+                        <a href="#" class="btn btn-primary btn-sm">Get Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{%endblock%}
