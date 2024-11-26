@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, session, url_for
 
-from bookstoremanagement import app
+from bookstoremanagement import app, dao
 
 app.secret_key = "123456"
 
@@ -8,13 +8,23 @@ app.secret_key = "123456"
 def home_page():
     return render_template('index.html')
 
+
 @app.route('/popular')
 def popular_page():
     return render_template('popularbook.html')
 
 @app.route('/ourstore')
 def our_store_page():
-    return render_template('ourstore.html')
+    # Lấy danh mục
+    cates = dao.load_categories()
+
+    # Lấy category_id từ tham số URL
+    cate_id = request.args.get('category_id')
+
+    # Nếu không có category_id, lấy tất cả sách
+    books = dao.load_books() if not cate_id else dao.load_books(cate_id=cate_id)
+
+    return render_template('ourstore.html', categories=cates, books=books ,active_cate_id=cate_id)
 
 @app.route('/login',methods=['get','post'])
 def user_login_page():

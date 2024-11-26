@@ -1,3 +1,4 @@
+from flask import json
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -51,6 +52,7 @@ class Book(db.Model):
     name = db.Column(db.String(100) ,nullable=False)
     price = db.Column(db.Float)
     publisherName = db.Column(db.String(100))
+    image = Column(db.String(200), nullable=True)
     description = db.Column(db.String(100))
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
 
@@ -60,7 +62,6 @@ class Book(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     name = db.Column(db.String(100),nullable=False)
-    totalBook = db.Column(db.Integer)
     stock_id = Column(Integer, ForeignKey('stock.id'), nullable=False)
     books = relationship(Book, backref='category', lazy=True)
 
@@ -69,9 +70,6 @@ class Category(db.Model):
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    description = db.Column(db.String(100))
-    totalCategory = db.Column(db.Integer)
     categories = relationship('Category' ,backref='Stock', lazy=True)
 
     def __str__(self):
@@ -136,4 +134,18 @@ class DetailInvoice(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
+        # db.create_all()
+        # stock = Stock()
+        # db.session.add(stock)
+        # db.session.commit()
+        # c1 = Category(name="Lap trinh", stock_id=1)
+        # c2 = Category(name="Ngon tinh", stock_id=1)
+        # c3 = Category(name="Thieu nhi", stock_id=1)
+        # db.session.add_all([c1, c2, c3])
+        # db.session.commit()
+        with open('data/books.json', encoding='utf-8') as f:
+            books = json.load(f)
+            for b in books:
+                book = Book(**b)
+                db.session.add(book)
+        db.session.commit()
