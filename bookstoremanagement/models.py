@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, Enum
+from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
+
 from bookstoremanagement import app ,db
 
 class Role(db.Model):
@@ -69,9 +70,6 @@ class Category(db.Model):
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    description = db.Column(db.String(100))
-    totalCategory = db.Column(db.Integer)
     categories = relationship('Category' ,backref='Stock', lazy=True)
 
     def __str__(self):
@@ -137,9 +135,11 @@ class DetailInvoice(db.Model):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
+
+        s1 = Stock(id=1)
+        db.session.add(s1)
         c1 = Category(name="Lap trinh", stock_id=1)
         c2 = Category(name="Ngon tinh", stock_id=1)
         c3 = Category(name="Thieu nhi", stock_id=1)
-        # Thêm các đối tượng vào cơ sở dữ liệu
         db.session.add_all([c1, c2, c3])
         db.session.commit()
