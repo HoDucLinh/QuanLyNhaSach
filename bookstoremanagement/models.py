@@ -82,7 +82,7 @@ class Customer(db.Model):
     address = db.Column(db.String(100))
     paymentInfo = db.Column(db.String(100))
     email = db.Column(db.String(100))
-    cart_id = Column(Integer, ForeignKey('cart.id'), nullable=False)
+    cart_id = Column(Integer, ForeignKey('cart.id'), nullable=True)
     saleinvoices = relationship('SaleInvoice', backref='customer', lazy=True)
 
     def __str__(self):
@@ -134,18 +134,29 @@ class DetailInvoice(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
-        # db.create_all()
-        # stock = Stock()
-        # db.session.add(stock)
-        # db.session.commit()
-        # c1 = Category(name="Lap trinh", stock_id=1)
-        # c2 = Category(name="Ngon tinh", stock_id=1)
-        # c3 = Category(name="Thieu nhi", stock_id=1)
-        # db.session.add_all([c1, c2, c3])
-        # db.session.commit()
+        db.create_all()
+        stock = Stock()
+        db.session.add(stock)
+        db.session.commit()
+        c1 = Category(name="Lap trinh", stock_id=1)
+        c2 = Category(name="Ngon tinh", stock_id=1)
+        c3 = Category(name="Thieu nhi", stock_id=1)
+        db.session.add_all([c1, c2, c3])
+        db.session.commit()
         with open('data/books.json', encoding='utf-8') as f:
             books = json.load(f)
             for b in books:
                 book = Book(**b)
                 db.session.add(book)
+        db.session.commit()
+        new_customer = Customer(
+            name='Nguyen Van A',
+            phoneNumber='0901234567',
+            address='123 Đường ABC, Thành phố XYZ',
+            paymentInfo='Visa 1234-5678-9012-3456',
+            email='customer@gmail.com'
+        )
+
+        # Thêm đối tượng vào cơ sở dữ liệu
+        db.session.add(new_customer)
         db.session.commit()

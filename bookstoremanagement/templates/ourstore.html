@@ -36,25 +36,26 @@
                             {% for book in books %}
                             <div class="col-md-3">
                                 <div class="product-item">
-                                    <figure class="product-style">
-                                        <img src="{{ book.image }}" alt="{{book.name}}" class="product-item">
-                                        <button type="button" class="add-to-cart" data-product-tile="add-to-cart">Add to
-                                            Cart
-                                        </button>
-                                    </figure>
-                                    <figcaption>
-                                        <h3>{{ book.name }}</h3>
-                                        <span>{{ book.publisherName }}</span>
-                                        <div class="item-price">${{ book.price }}</div>
-                                    </figcaption>
+                                    <form action="/add_to_cart" method="POST">
+                                        <figure class="product-style">
+                                            <img src="{{ book.image }}" alt="{{ book.name }}" class="product-item">
+                                            <button type="submit" class="add-to-cart">Add to Cart</button>
+                                        </figure>
+                                        <figcaption>
+                                            <h3>{{ book.name }}</h3>
+                                            <span>{{ book.publisherName }}</span>
+                                            <div class="item-price">${{ book.price }}</div>
+                                        </figcaption>
+                                        <input type="hidden" name="book_id" value="{{ book.id }}">
+                                    </form>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                         {% else %}
-                        <!-- Hiển thị thông báo nếu không có sách -->
                         <p>No books available for this category.</p>
                         {% endif %}
+
                     </div>
                 </div>
             </div><!--inner-tabs-->
