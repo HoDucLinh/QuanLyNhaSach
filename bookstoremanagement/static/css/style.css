@@ -1,18 +1,4 @@
-/*
-Theme Name: Booksaw BookStore Template
-Theme URI: https://templatesjungle.com/
-Author: TemplatesJungle
-Author URI: https://templatesjungle.com/
-Description: Booksaw is specially designed product packaged for Book Store by TemplateJungle.
-Version: 1.1
-*/
 
-/*--------------------------------------------------------------
-/* GENERAL STYLES
---------------------------------------------------------------*/
-/*--------------------------------------------------------------
-/** 1. VARIABLES
---------------------------------------------------------------*/
 :root {
     /* widths for rows and containers
        */
@@ -1849,7 +1835,13 @@ img.post-image {
     width: 100%;
     justify-content: center;
 }
-
+.banner-image {
+    width: 100%;
+    height: 300px; /* Chiều cao cố định */
+    object-fit: cover; /* Đảm bảo ảnh hiển thị đẹp */
+    border-radius: 10px; /* Tùy chọn */
+    display: block; /* Đảm bảo không bị inline spacing */
+}
 .main-slider .banner-content {
     width: 35%;
     margin-top: 60px;
@@ -1857,7 +1849,7 @@ img.post-image {
 }
 
 .banner-content h2.banner-title {
-    font-size: 4.5em;
+    font-size: 2 em;
     font-weight: 500;
     color: #222;
 }

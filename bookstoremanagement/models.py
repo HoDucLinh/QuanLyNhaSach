@@ -1,51 +1,62 @@
+import hashlib
+
 from flask import json
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
-
+from enum import Enum as PyEnum
+from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app ,db
+from flask_login import UserMixin
 
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    description = db.Column(db.String(100))
-    employees = db.relationship('Employee', backref='role', lazy=True)
+
+class UserRole(PyEnum):
+    ADMIN = 1
+    SALE = 2
+    USER = 3
+
+
+class User(db.Model , UserMixin):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(100), nullable=False, unique=True)
+    password = db.Column(db.String(100), nullable=False)
+    avatar = db.Column(db.String(100), default="https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598215/or1fkdx65mg2bkeft7di.jpg")
+    email = db.Column(db.String(200) , nullable=True)
+    user_role = db.Column(SQLEnum(UserRole), default=UserRole.USER)
+    # 1 nhân viên sale có thể tạo nhiều hóa đơn
+    sale_invoices = relationship('SaleInvoice', backref='saleInvoice', lazy=True)
+    # 1 admin có thể tạo nhiều report
+    reports = relationship('Report', backref='report', lazy=True)
+    # 1 nhân viên có the tạo nhiều hóa đơn nhập kho
+    stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
 
     def __str__(self):
         return self.name
 
-class Employee(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    phoneNumber = db.Column(db.String(50),nullable=False)
-    address = db.Column(db.String(100))
-    role_id = Column(Integer, ForeignKey('role.id'), nullable=False)
-    reports = db.relationship('Report', backref='employee', lazy=True)
-    stockinvoices = db.relationship('StockInvoice', backref='employee', lazy=True)
-    saleinvoices = db.relationship('SaleInvoice', backref='employee', lazy=True)
-
-    def __str__(self):
-        return self.name
 
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     reportDate = db.Column(db.Date)
     reportType = db.Column(db.String(100))
-    employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
+    #lưu admin tạo report
+    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
 
     def __str__(self):
         return self.name
 
-# phai xem lai
+
 class StockInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     createdDate = db.Column(db.Date)
     totalAmount = db.Column(db.Float)
     totalQuantity = db.Column(db.Integer)
     supplierName = db.Column(db.String(100))
-    employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
+    #lưu nhân viên tạo report
+    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
 
     def __str__(self):
         return self.name
+
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
@@ -53,11 +64,12 @@ class Book(db.Model):
     price = db.Column(db.Float)
     publisherName = db.Column(db.String(100))
     image = Column(db.String(200), nullable=True)
-    description = db.Column(db.String(100))
+    description = db.Column(db.String(300))
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
 
     def __str__(self):
         return self.name
+
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
@@ -68,6 +80,7 @@ class Category(db.Model):
     def __str__(self):
         return self.name
 
+
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     categories = relationship('Category' ,backref='Stock', lazy=True)
@@ -75,22 +88,10 @@ class Stock(db.Model):
     def __str__(self):
         return self.name
 
-class Customer(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    phoneNumber = db.Column(db.String(100),nullable=False)
-    address = db.Column(db.String(100))
-    paymentInfo = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    cart_id = Column(Integer, ForeignKey('cart.id'), nullable=True)
-    saleinvoices = relationship('SaleInvoice', backref='customer', lazy=True)
-
-    def __str__(self):
-        return self.name
 
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
+    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
 
     def __str__(self):
         return self.name
@@ -101,22 +102,16 @@ class CartDetail(db.Model):
     cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
     quantity = db.Column(db.Integer , nullable=False)
 
-
-class PaymentMethod(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    name = db.Column(db.String(100),nullable=False)
-    description = db.Column(db.String(100))
-    saleinvoices = relationship('SaleInvoice', backref='paymentMethod', lazy=True)
-
     def __str__(self):
         return self.name
+
+
 class SaleInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     paymentStatus = db.Column(db.String(100))
-    paymentMethod_id = Column(Integer, ForeignKey(PaymentMethod.id), nullable=False)
-    employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
-    customer_id = Column(Integer, ForeignKey(Customer.id), nullable=False)
-
+    customer_name = Column(String(100), nullable=False)
+    # FK tới User , nếu có dữ liệu là mua tại của hàng , null là mua online
+    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     def __str__(self):
         return self.name
 
@@ -134,29 +129,22 @@ class DetailInvoice(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
-        stock = Stock()
-        db.session.add(stock)
-        db.session.commit()
-        c1 = Category(name="Lap trinh", stock_id=1)
-        c2 = Category(name="Ngon tinh", stock_id=1)
-        c3 = Category(name="Thieu nhi", stock_id=1)
-        db.session.add_all([c1, c2, c3])
-        db.session.commit()
-        with open('data/books.json', encoding='utf-8') as f:
-            books = json.load(f)
-            for b in books:
-                book = Book(**b)
-                db.session.add(book)
-        db.session.commit()
-        new_customer = Customer(
-            name='Nguyen Van A',
-            phoneNumber='0901234567',
-            address='123 Đường ABC, Thành phố XYZ',
-            paymentInfo='Visa 1234-5678-9012-3456',
-            email='customer@gmail.com'
-        )
-
+        # db.create_all()
+        # stock = Stock()
+        # db.session.add(stock)
+        # db.session.commit()
+        # c1 = Category(name="Lap trinh", stock_id=1)
+        # c2 = Category(name="Ngon tinh", stock_id=1)
+        # c3 = Category(name="Thieu nhi", stock_id=1)
+        # db.session.add_all([c1, c2, c3])
+        # db.session.commit()
+        # with open('data/books.json', encoding='utf-8') as f:
+        #     books = json.load(f)
+        #     for b in books:
+        #         book = Book(**b)
+        #         db.session.add(book)
+        # db.session.commit()
+        new_user = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("2004".encode('utf-8')).hexdigest()),email='customer@gmail.com')
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add(new_customer)
+        db.session.add(new_user)
         db.session.commit()

@@ -1,5 +1,7 @@
 {% extends 'layout/main.html' %}
-
+{%block title%}
+<title>My Cart</title>
+{%endblock%}
 {% block content %}
 <!-- Cart content -->
 <div class="container my-5" id="download-app">
@@ -24,8 +26,12 @@
             </td>
             <td class="price">{{ item.price }} VND</td>
             <td>
-                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="10" class="quantity"
-                       data-price="{{ item.price }}" style="width: 50px;">
+                <!-- Form cập nhật số lượng -->
+                <form method="POST" action="/update_quantity">
+                    <input type="hidden" name="book_id" value="{{ item.book_id }}">
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="10" class="quantity"
+                           data-price="{{ item.price }}" style="width: 50px;" onchange="this.form.submit();">
+                </form>
             </td>
             <td class="total">{{ item.total }} VND</td>
             <td>
@@ -42,6 +48,11 @@
     <!-- Display total price -->
     <div class="total-price">
         <h3>Tổng cộng: {{ total_price }} VND</h3>
+    </div>
+    <div class="checkout">
+        <form method="POST" action="/payment">
+            <button class="btn btn-success btn-lg">Thanh toán</button>
+        </form>
     </div>
 
 </div>

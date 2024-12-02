@@ -16,7 +16,12 @@
                                 <li class="menu-item"><a href="{{ url_for('our_store_page')}}" class="nav-link">Our Store</a></li>
                                 <li class="menu-item"><a href="{{ url_for('popular_page')}}" class="nav-link">Popular</a></li>
                                 <li class="menu-item"><a href="{{ url_for('cart_page')}}" class="cart for-buy"><i class="icon icon-clipboard"></i><span>Cart:(0$)</span></a></li>
+                                {% if current_user.is_authenticated%}
+                                <img src="{{current_user.avatar}}" alt="" width = "25" class="rounded img-fluid">
+                                <li class="menu-item"><a href="{{ url_for('user_login_page')}}" class="user-account for-buy"><i class="icon icon-user"></i><span>{{current_user.name}}</span></a></li>
+                                {% else %}
                                 <li class="menu-item"><a href="{{ url_for('user_login_page')}}" class="user-account for-buy"><i class="icon icon-user"></i><span>Sign In</span></a></li>
+                                {%endif%}
                                 <li class="menu-item">
                                     <div class="action-menu">
 
@@ -26,8 +31,7 @@
                                                 <i class="icon icon-search"></i>
                                             </a>
                                             <form role="search" method="get" class="search-box">
-                                                <input class="search-field text search-input" placeholder="Search"
-                                                       type="search">
+                                                <input class="search-field text search-input" placeholder="Search" type="search" name="q">
                                             </form>
                                         </div>
                                     </div>
