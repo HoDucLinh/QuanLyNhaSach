@@ -2296,9 +2296,6 @@ footer#footer {
     margin-right: 100px;
 }
 
-#footer .footer-item img.footer-logo {
-    margin-bottom: 40px;
-}
 
 #footer .footer-item p {
     width: 80%;
@@ -2335,7 +2332,6 @@ footer#footer {
         margin-right: 0;
     }
 }
-
 /* Shop page */
 .products-grid {
     display: flex;
@@ -2467,7 +2463,7 @@ footer#footer {
 .cart-table th, .cart-table td {
             padding: 15px;
             text-align: center;
-        }
+            }
 
         .cart-table {
             margin-top: 20px;
@@ -2502,6 +2498,5 @@ footer#footer {
         .cart-actions .btn {
             width: 48%;
         }
-
 
 

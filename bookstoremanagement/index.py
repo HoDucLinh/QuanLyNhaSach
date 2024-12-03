@@ -1,8 +1,9 @@
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
+from sqlalchemy import func
 
 from bookstoremanagement import app, dao, db , login
-from bookstoremanagement.models import Cart, CartDetail, Book
-from flask_login import login_user, current_user , logout_user
+from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
+from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 
 app.secret_key = "123456"
@@ -89,9 +90,17 @@ def sale_employee_page():
 def payment_page():
     return render_template('payment.html')
 
+
 @app.route('/account')
+@login_required
 def account_page():
-    return render_template('accountcustomer.html')
+    invoices = dao.load_invoice(current_user.id)  # Lấy hóa đơn cho user hiện tại
+    return render_template('accountcustomer.html', invoices=invoices)
+
+
+@app.route('/editprofile')
+def edit_profile():
+    return render_template('editprofile.html')
 
 
 @app.route('/cart')

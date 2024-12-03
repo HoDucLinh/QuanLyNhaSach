@@ -1,7 +1,9 @@
 import hashlib
 
+from sqlalchemy import func
+
 from bookstoremanagement import db
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice
 
 
 def load_books(cate_id=None, kw=None):
@@ -65,5 +67,23 @@ def auth_user(username, password):
 
     return User.query.filter(User.username.__eq__(username),User.password.__eq__(password)).first()
 
+
 def load_user_by_id(user_id):
     return User.query.get(user_id)
+
+
+def load_invoice(user_id):
+    invoices = (
+        db.session.query(
+            SaleInvoice.id,  # ID hóa đơn
+            SaleInvoice.orderDate,  # Ngày đặt hàng
+            SaleInvoice.paymentStatus,  # Trạng thái thanh toán
+            func.sum(Book.price * DetailInvoice.quantity).label("totalAmount")  # Tổng tiền hóa đơn
+        )
+        .join(DetailInvoice, SaleInvoice.id == DetailInvoice.saleInvoice_id)
+        .join(Book, Book.id == DetailInvoice.book_id)
+        .filter(SaleInvoice.customer_id == user_id)  # Chỉ lấy hóa đơn của user hiện tại
+        .group_by(SaleInvoice.id)  # Nhóm theo từng hóa đơn
+        .all()
+    )
+    return invoices

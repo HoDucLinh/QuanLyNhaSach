@@ -2,6 +2,107 @@
 {% block title %}
 <title>My Account</title>
 {% endblock %}
+
 {% block content %}
-<p>HELLO</p>
+<header class="mb-4">
+    <h1 class="text-center">Customer Information</h1>
+    <p class="text-center text-muted">Here you can find all your orders and favorite products.</p>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row">
+        <!-- Orders Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Customer Orders</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td>#{{ invoice.id }}</td>
+                            <td>{{ invoice.orderDate }}</td>
+                            <td>
+                <span class="badge
+                    {% if invoice.paymentStatus == 'Paid' %}
+                        bg-success
+                    {% else %}
+                        bg-danger
+                    {% endif %}
+                ">
+                    {{ invoice.paymentStatus }}
+                </span>
+                            </td>
+                            <td>${{ "%.2f" | format(invoice.totalAmount) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">You have no orders yet.</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Favorite Products Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Favorite Products</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Wireless Headphones</td>
+                            <td>Electronics</td>
+                            <td>$120.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Leather Wallet</td>
+                            <td>Accessories</td>
+                            <td>$50.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Coffee Maker</td>
+                            <td>Home Appliances</td>
+                            <td>$80.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">View</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

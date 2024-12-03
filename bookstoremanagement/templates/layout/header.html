@@ -17,7 +17,13 @@
                                 <li class="menu-item"><a href="{{ url_for('popular_page')}}" class="nav-link">Popular</a></li>
                                 <li class="menu-item"><a href="{{ url_for('cart_page')}}" class="cart for-buy"><i class="icon icon-clipboard"></i><span>Cart:(0$)</span></a></li>
                                 {% if current_user.is_authenticated%}
-                                <li class="menu-item"><a href="{{ url_for('account_page')}}" class="user-account for-buy"><img src="{{current_user.avatar}}" alt="" width = "25" class="rounded img-fluid"><span>{{current_user.name}}</span></a></li>
+                                <li class="menu-item has-sub"><a href="{{ url_for('account_page')}}" class="user-account for-buy"><img src="{{current_user.avatar}}" alt="" width = "25" class="rounded img-fluid" style="margin-right:5px"><span>{{current_user.name}}</span></a>
+                                    <ul>
+                                                <li><a href="{{ url_for('edit_profile')}}">Edit Profile</a></li>
+                                                <li><a href="{{ url_for('account_page')}}">My Account</a></li>
+                                                <li><a href="{{ url_for('logout_my_user')}}">Log out</a></li>
+                                    </ul>
+                                </li>
                                 {% else %}
                                 <li class="menu-item"><a href="{{ url_for('user_login_page')}}" class="user-account for-buy"><span>Sign In</span></a></li>
                                 {%endif%}

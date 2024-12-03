@@ -3,7 +3,6 @@
 <title>Login</title>
 {%endblock%}
 {%block content%}
-<section class="leaf-pattern-overlay" id="download-app">
     <div class="container-fluid h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
             <div class="col-md-9 col-lg-6 col-xl-5">
@@ -33,12 +32,11 @@
                     </div>
 
                     <!-- Divider -->
-                    <div class="divider d-flex align-items-center my-4">
+                    <div class="divider d-flex align-items-center my-4" style="height:20px">
                         <hr class="flex-grow-1">
                         <p class="text-center fw-bold mx-3 mb-0">Or</p>
                         <hr class="flex-grow-1">
                     </div>
-
                     <!-- Email input -->
                     {%if err_msg%}
                     <div class="alert alert-danger">{{err_msg}}</div>
@@ -78,5 +76,4 @@
             </div>
         </div>
     </div>
-</section>
 {%endblock%}

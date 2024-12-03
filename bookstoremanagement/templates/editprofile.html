@@ -1,0 +1,62 @@
+{%extends 'layout/main.html'%}
+{%block title%}
+<title>Edit Profile</title>
+{%endblock%}
+{%block content%}
+<!-- Page Header -->
+    <header class="mb-4">
+        <h1 class="text-center">Edit Profile</h1>
+        <p class="text-center text-muted">Update your personal information here.</p>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Profile Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/update-profile" method="POST">
+                            <!-- Full Name -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" value="John Doe" required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="johndoe@example.com" required>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="123-456-7890">
+                            </div>
+
+                            <!-- Address -->
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3">123 Main Street, Cityville</textarea>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter new password">
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{%endblock%}
