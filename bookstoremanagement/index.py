@@ -40,11 +40,7 @@ def user_login_page():
 def register_page():
     return render_template('register.html')
 
-@app.route('/admin')
-def admin_page():
-    if session.get('user_role') == 'admin':
-        return render_template('admin.html')
-    return redirect(url_for('user_login_page'))
+
 @app.route('/sale-employee')
 def sale_employee_page():
     if session.get('user_role') == 'sale':
