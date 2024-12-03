@@ -1838,12 +1838,13 @@ img.post-image {
 .banner-image {
     width: 100%;
     height: 300px; /* Chiều cao cố định */
-    object-fit: cover; /* Đảm bảo ảnh hiển thị đẹp */
+    object-fit: contain; /* Đảm bảo ảnh hiển thị đầy đủ mà không bị cắt */
     border-radius: 10px; /* Tùy chọn */
     display: block; /* Đảm bảo không bị inline spacing */
+    margin: 0 auto; /* Tùy chọn để căn giữa */
 }
 .main-slider .banner-content {
-    width: 35%;
+    width: 70%;
     margin-top: 60px;
     margin-right: 175px;
 }
@@ -2246,7 +2247,6 @@ span.prev-price {
 --------------------------------------------------------------*/
 #download-app {
     background: #EDEBE4;
-    padding: 120px 0;
     overflow: hidden;
     z-index: 0;
 }
@@ -2435,6 +2435,7 @@ footer#footer {
 }
 
 
+
 .sidebar {
     width: 250px;
     background-color: #007bff;
@@ -2501,5 +2502,6 @@ footer#footer {
         .cart-actions .btn {
             width: 48%;
         }
+
 
 

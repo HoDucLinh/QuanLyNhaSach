@@ -11,7 +11,7 @@
                      class="img-fluid" alt="Sample image">
             </div>
             <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-                <form method="POST" action="/register">
+                <form method="POST" action="/register" enctype="multipart/form-data">
                     <!-- Title -->
                     <h3 class="text-center mb-4">Create Your Account</h3>
                     {%if err_msg%}

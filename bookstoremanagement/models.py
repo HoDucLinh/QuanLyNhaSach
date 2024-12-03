@@ -20,7 +20,7 @@ class User(db.Model , UserMixin):
     name = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
-    avatar = db.Column(db.String(100), default="https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598215/or1fkdx65mg2bkeft7di.jpg")
+    avatar = db.Column(db.String(2083), default="https://res.cloudinary.com/dzwsdpjgi/image/upload/v1733196994/default-avatar-profile-icon-vector-social-media-user-photo-700-205577532_tfbwxm.jpg")
     email = db.Column(db.String(200) , nullable=True)
     user_role = db.Column(SQLEnum(UserRole), default=UserRole.USER)
     # 1 nhân viên sale có thể tạo nhiều hóa đơn
@@ -129,21 +129,21 @@ class DetailInvoice(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
-        # db.create_all()
-        # stock = Stock()
-        # db.session.add(stock)
-        # db.session.commit()
-        # c1 = Category(name="Lap trinh", stock_id=1)
-        # c2 = Category(name="Ngon tinh", stock_id=1)
-        # c3 = Category(name="Thieu nhi", stock_id=1)
-        # db.session.add_all([c1, c2, c3])
-        # db.session.commit()
-        # with open('data/books.json', encoding='utf-8') as f:
-        #     books = json.load(f)
-        #     for b in books:
-        #         book = Book(**b)
-        #         db.session.add(book)
-        # db.session.commit()
+        db.create_all()
+        stock = Stock()
+        db.session.add(stock)
+        db.session.commit()
+        c1 = Category(name="Lap trinh", stock_id=1)
+        c2 = Category(name="Ngon tinh", stock_id=1)
+        c3 = Category(name="Thieu nhi", stock_id=1)
+        db.session.add_all([c1, c2, c3])
+        db.session.commit()
+        with open('data/books.json', encoding='utf-8') as f:
+            books = json.load(f)
+            for b in books:
+                book = Book(**b)
+                db.session.add(book)
+        db.session.commit()
         new_user = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("2004".encode('utf-8')).hexdigest()),email='customer@gmail.com')
         # Thêm đối tượng vào cơ sở dữ liệu
         db.session.add(new_user)

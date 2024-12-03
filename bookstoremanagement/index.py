@@ -50,6 +50,7 @@ def user_login_page():
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
     return render_template('login.html' , err_msg = err_msg)
 
+
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
@@ -90,41 +91,37 @@ def payment_page():
 
 @app.route('/account')
 def account_page():
-    if session.get('user_role') == 'customer':
-        return render_template('accountcustomer.html')
-    return redirect(url_for('user_login_page'))
+    return render_template('accountcustomer.html')
 
 
 @app.route('/cart')
 def cart_page():
-    user_id = current_user.id  # Get user ID from session
-    if not user_id:
-        return redirect('/login')  # Redirect to login if the user is not logged in
-
-    # Get the cart for the customer with cart_id = 1
-    cart = Cart.query.filter_by(user_id=user_id).first()  # Assuming cart_id is 1
-    if not cart:
-        return render_template('cart.html', books=[], total_price=0)  # Return empty cart if no cart is found
-
-    # Get the cart details (products in the cart)
-    cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
-
-    # Create list of books in the cart and calculate total price
     books_in_cart = []
     total_price = 0
-    for detail in cart_details:
-        book = Book.query.get(detail.book_id)
-        if book:
-            books_in_cart.append({
-                'name': book.name,
-                'price': book.price,
-                'quantity': detail.quantity,
-                'total': book.price * detail.quantity,
-                'book_id': book.id,
-                'image': book.image,
-                'description': book.description
-            })
-            total_price += book.price * detail.quantity
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        cart = Cart.query.filter_by(user_id=user_id).first()  # Assuming cart_id is 1
+        if not cart:
+            return render_template('cart.html', books=[], total_price=0)  # Return empty cart if no cart is found
+
+        # Get the cart details (products in the cart)
+        cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+
+        for detail in cart_details:
+            book = Book.query.get(detail.book_id)
+            if book:
+                books_in_cart.append({
+                    'name': book.name,
+                    'price': book.price,
+                    'quantity': detail.quantity,
+                    'total': book.price * detail.quantity,
+                    'book_id': book.id,
+                    'image': book.image,
+                    'description': book.description
+                })
+                total_price += book.price * detail.quantity
+    else :
+        return redirect('/login')
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
 
@@ -132,18 +129,18 @@ def cart_page():
 def add_to_cart():
     # Lấy dữ liệu từ form
     book_id = request.form.get('book_id')
-    user_id = current_user.id  # Lấy ID người dùng từ session
 
-    if not user_id:  # Nếu không có user_id, yêu cầu đăng nhập
-        return jsonify({"error": "Bạn phải đăng nhập"}), 401
+    if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
+        user_id = current_user.id  # Lấy ID người dùng
+        dao.insert_book_to_cart(user_id , book_id)
+        flash('Thêm vào giỏ hàng thành công'), 200
+        return jsonify({'message': 'Added to cart successfully'}), 200
 
-    dao.insert_book_to_cart(user_id , book_id)
-
-    return jsonify({"message": "Sản phẩm đã được thêm vào giỏ hàng"}), 200
+    return jsonify({'error': 'Bạn phải đăng nhập'}), 401
 
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
-    user_id = current_user.id  # Lấy ID người dùng từ session
+    user_id = current_user.id
     if not user_id:
         return redirect('/login')  # Nếu chưa đăng nhập, chuyển hướng tới trang login
 
