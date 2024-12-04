@@ -1,3 +1,5 @@
+import math
+
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
 
@@ -28,13 +30,28 @@ def our_store_page():
     # Lấy danh mục
     cates = dao.load_categories()
 
-    # Lấy category_id từ tham số URL
+    # Lấy category_id và page từ tham số URL
     cate_id = request.args.get('category_id')
+    page = request.args.get("page", 1, type=int)  # Đặt giá trị mặc định cho page là 1 nếu không có tham số
 
-    # Nếu không có category_id, lấy tất cả sách
-    books = dao.load_books() if not cate_id else dao.load_books(cate_id=cate_id)
+    # Lấy danh sách sách và tổng số sách theo danh mục (hoặc tất cả nếu không có category_id)
+    if cate_id:
+        books = dao.load_books(cate_id=cate_id, page=page)
+        total = dao.count_books(cate_id=cate_id)
+    else:
+        books = dao.load_books(page=page)
+        total = dao.count_books()
 
-    return render_template('ourstore.html', categories=cates, books=books ,active_cate_id=cate_id)
+    # Tính số trang
+    pages = math.ceil(total / app.config["PAGE_SIZE"])
+
+    return render_template(
+        'ourstore.html',
+        categories=cates,
+        books=books,
+        active_cate_id=cate_id,
+        pages=pages
+    )
 
 @app.route('/login',methods=['get','post'])
 def user_login_page():

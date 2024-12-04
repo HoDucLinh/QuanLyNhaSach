@@ -2,11 +2,11 @@ import hashlib
 
 from sqlalchemy import func
 
-from bookstoremanagement import db
+from bookstoremanagement import db, app
 from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice
 
 
-def load_books(cate_id=None, kw=None):
+def load_books(cate_id=None, kw=None , page = None):
     query = Book.query
 
     if cate_id:
@@ -15,10 +15,23 @@ def load_books(cate_id=None, kw=None):
     if kw:
         query = query.filter(Book.name.contains(kw))
 
+    if page:
+        page_size = app.config["PAGE_SIZE"]
+        start = (int(page) - 1) * page_size
+        query = query.slice(start, start + page_size)
+
     return query.all()
+
 
 def load_categories():
     return Category.query.all()
+
+def count_books(cate_id=None):
+    query = Book.query
+    if cate_id:
+        query = query.filter(Book.category_id == cate_id)
+    return query.count()
+
 
 def load_product_by_id(id):
     book = Book.query.filter_by(id=id).first()
