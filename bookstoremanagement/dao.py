@@ -26,6 +26,7 @@ def load_books(cate_id=None, kw=None , page = None):
 def load_categories():
     return Category.query.all()
 
+
 def count_books(cate_id=None):
     query = Book.query
     if cate_id:
@@ -36,6 +37,7 @@ def count_books(cate_id=None):
 def load_product_by_id(id):
     book = Book.query.filter_by(id=id).first()
     return book
+
 
 def insert_book_to_cart(user_id , book_id ):
     # Kiểm tra xem người dùng đã có giỏ hàng chưa

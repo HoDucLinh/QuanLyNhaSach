@@ -1,3 +1,4 @@
+import hashlib
 import math
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
@@ -72,6 +73,8 @@ def user_login_page():
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
+
+
 @app.route('/register' , methods = ['GET','POST'])
 def register_page():
     msg = None
@@ -93,17 +96,16 @@ def register_page():
             msg = "Xac nhan mat khau chua dung"
     return render_template("register.html" , err_msg = msg)
 
-@app.route('/admin')
-def admin_page():
-    if session.get('user_role') == 'admin':
-        return render_template('admin.html')
-    return redirect(url_for('user_login_page'))
+
 @app.route('/sale-employee')
 def sale_employee_page():
     if session.get('user_role') == 'sale':
         return render_template('sale_employee.html')
     return redirect(url_for('user_login_page'))
+
+
 @app.route('/payment' , methods=['POST'])
+
 def payment_page():
     return render_template('payment.html')
 
@@ -113,11 +115,6 @@ def payment_page():
 def account_page():
     invoices = dao.load_invoice(current_user.id)  # Lấy hóa đơn cho user hiện tại
     return render_template('accountcustomer.html', invoices=invoices)
-
-
-@app.route('/editprofile')
-def edit_profile():
-    return render_template('editprofile.html')
 
 
 @app.route('/cart')
@@ -151,6 +148,7 @@ def cart_page():
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
 
+
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     # Lấy dữ liệu từ form
@@ -163,6 +161,7 @@ def add_to_cart():
         return jsonify({'message': 'Added to cart successfully'}), 200
 
     return jsonify({'error': 'Bạn phải đăng nhập'}), 401
+
 
 @app.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart():
@@ -219,6 +218,57 @@ def update_quantity():
             db.session.commit()
 
     return redirect('/cart')  # Quay lại trang giỏ hàng
+
+
+@app.route('/edit-profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    err_msg = None
+    if request.method == 'POST':
+        # Lấy thông tin từ form
+        name = request.form.get('name')
+        email = request.form.get('email')
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+        avatar = request.files.get('new_avatar')
+        avatar_path = None
+
+        # Cờ để theo dõi nếu có thay đổi
+        updated = False
+
+        # Kiểm tra và cập nhật tên
+        if name and name != current_user.name:
+            current_user.name = name
+            updated = True
+
+        # Kiểm tra và cập nhật email
+        if email and email != current_user.email:
+            current_user.email = email
+            updated = True
+
+        # Kiểm tra và cập nhật mật khẩu
+        if old_password and new_password:
+            old_password = str(hashlib.md5(old_password.encode('utf-8')).hexdigest())
+            if current_user.password.__eq__(old_password):
+                new_password = str(hashlib.md5(new_password.encode('utf-8')).hexdigest())
+                current_user.password = new_password
+                updated = True
+            else:
+                err_msg = "Mat khau khong dung!!!"
+                return render_template('editprofile.html' , msg = err_msg)
+        if avatar:
+            res = cloudinary.uploader.upload(avatar)
+            avatar_path = res['secure_url']
+            current_user.avatar = avatar_path
+            updated = True
+        # Nếu có thay đổi, lưu vào cơ sở dữ liệu
+        if updated:
+            db.session.commit()
+            err_msg = "Cap nhat thanh cong"
+
+    # Phương thức GET: hiển thị form
+    return render_template('editprofile.html' , msg = err_msg)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
