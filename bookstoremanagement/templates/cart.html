@@ -5,8 +5,13 @@
 {% block content %}
 <!-- Cart content -->
 <div class="container my-5" id="download-app">
-    <h2>Giỏ hàng của bạn</h2>
-
+    {% if get_flashed_messages() %}
+    <div class="alert alert-info">
+        {% for message in get_flashed_messages() %}
+        <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
     <table class="table table-bordered cart-table">
         <thead>
         <tr>

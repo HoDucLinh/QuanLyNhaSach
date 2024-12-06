@@ -142,7 +142,8 @@ def cart_page():
                     'image': book.image,
                     'description': book.description
                 })
-                total_price += book.price * detail.quantity
+        for b in books_in_cart:
+            total_price += b['total']
     else :
         return redirect('/login')
 
@@ -157,7 +158,6 @@ def add_to_cart():
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
         dao.insert_book_to_cart(user_id , book_id)
-        flash('Thêm vào giỏ hàng thành công'), 200
         return jsonify({'message': 'Added to cart successfully'}), 200
 
     return jsonify({'error': 'Bạn phải đăng nhập'}), 401
@@ -193,31 +193,18 @@ def logout_my_user():
 
 @app.route('/update_quantity', methods=['POST'])
 def update_quantity():
-    user_id = session.get('user_id')  # Lấy ID người dùng từ session
-    if not user_id:
-        return redirect('/login')  # Yêu cầu đăng nhập nếu chưa có user_id
+    book_id = request.form.get('book_id')
+    new_quantity = int(request.form.get('quantity'))
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
 
-    book_id = request.form.get('book_id')  # Lấy book_id từ form
-    quantity = int(request.form.get('quantity'))  # Lấy số lượng mới
-
-    # Lấy giỏ hàng của người dùng
-    cart = Cart.query.filter_by(user_id=user_id).first()
-    if not cart:
-        return redirect('/cart')  # Nếu không có giỏ hàng, quay lại trang giỏ hàng
-
-    # Tìm sản phẩm trong giỏ hàng
-    cart_detail = CartDetail.query.filter_by(cart_id=cart.id, book_id=book_id).first()
+    # Tìm sản phẩm và cập nhật số lượng
+    cart_detail = CartDetail.query.filter_by(book_id=book_id, cart_id=cart.id).first()
     if cart_detail:
-        if quantity > 0:
-            # Cập nhật số lượng
-            cart_detail.quantity = quantity
-            db.session.commit()
-        else:
-            # Nếu số lượng = 0, xóa sản phẩm khỏi giỏ hàng
-            db.session.delete(cart_detail)
-            db.session.commit()
-
-    return redirect('/cart')  # Quay lại trang giỏ hàng
+        cart_detail.quantity = new_quantity
+        db.session.commit()
+        flash('Cập nhật số lượng thành công!', 'success')
+    # Redirect về trang giỏ hàng
+    return redirect('/cart')
 
 
 @app.route('/edit-profile', methods=['GET', 'POST'])

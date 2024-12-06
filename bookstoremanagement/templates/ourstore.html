@@ -3,7 +3,7 @@
 <title>Our Store</title>
 {%endblock%}
 {%block content%}
-<section id="popular-books" >
+<section id="popular-books">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -20,7 +20,6 @@
                     <li data-tab-target="#all-genre" class="tab {% if not active_cate_id %}active{% endif %}">
                         <a href="/ourstore">All</a>
                     </li>
-
                     <!-- Các tab danh mục -->
                     {% for c in categories %}
                     <li data-tab-target="#all-genre"
