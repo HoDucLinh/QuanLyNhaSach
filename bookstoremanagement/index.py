@@ -105,7 +105,6 @@ def sale_employee_page():
 
 
 @app.route('/payment' , methods=['POST'])
-
 def payment_page():
     return render_template('payment.html')
 
@@ -186,7 +185,7 @@ def remove_from_cart():
     return redirect('/cart')  # Quay lại trang giỏ hàng sau khi xóa
 
 
-@app.route('/delete_from_favorite' , methods=['POST'])
+@app.route('/delete_from_favorite', methods=['POST'])
 def delete_from_favorite():
     user_id = current_user.id
     if not user_id:
@@ -194,18 +193,19 @@ def delete_from_favorite():
 
     book_id = request.form.get('book_id')
 
-    # Truy vấn favorite của người dùng
-    fa = Favorite.query.filter_by(customer_id=user_id).first()
-    if not fa:
-        return redirect('/account')  # Nếu không có giỏ hàng, quay lại trang giỏ hàng
+    # Truy vấn favorite của người dùng và tìm sản phẩm yêu thích theo book_id
+    favorite_detail = Favorite.query.filter_by(customer_id=user_id, book_id=book_id).first()
 
-    # Xóa sản phẩm khỏi giỏ hàng
-    favorite_detail = Favorite.query.filter_by(id=fa.id, book_id=book_id).first()
-    if favorite_detail:
-        db.session.delete(favorite_detail)
-        db.session.commit()
+    if not favorite_detail:
+        flash('Product not found in your favorites.', 'danger')
+        return redirect('/account')  # Nếu không có sản phẩm yêu thích, quay lại trang tài khoản
 
-    return redirect('/account')  # Quay lại trang giỏ hàng sau khi xóa
+    # Xóa sản phẩm khỏi danh sách yêu thích
+    db.session.delete(favorite_detail)
+    db.session.commit()
+
+    flash('Product removed from your favorites.', 'success')
+    return redirect('/account')  # Quay lại trang tài khoản sau khi xóa
 
 
 @app.route('/logout')
@@ -279,6 +279,34 @@ def edit_profile():
     # Phương thức GET: hiển thị form
     return render_template('editprofile.html' , msg = err_msg)
 
+
+@app.route('/toggle_favorite', methods=['POST'])
+def toggle_favorite():
+    data = request.get_json()
+    book_id = data['book_id']
+    user_id = data['user_id']
+    action = data['action']
+
+    if action == 'add':
+        # Kiểm tra xem sản phẩm đã có trong bảng yêu thích chưa
+        existing_favorite = Favorite.query.filter_by(book_id=book_id, customer_id=user_id).first()
+        if not existing_favorite:
+            new_favorite = Favorite(book_id=book_id, customer_id=user_id)
+            db.session.add(new_favorite)
+            db.session.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'message': 'Book already in favorites'})
+
+    elif action == 'remove':
+        # Xóa sản phẩm khỏi bảng yêu thích
+        favorite = Favorite.query.filter_by(book_id=book_id, customer_id=user_id).first()
+        if favorite:
+            db.session.delete(favorite)
+            db.session.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'message': 'Favorite not found'})
+
+    return jsonify({'success': False, 'message': 'Invalid action'})
 
 if __name__ == '__main__':
     app.run(debug=True)

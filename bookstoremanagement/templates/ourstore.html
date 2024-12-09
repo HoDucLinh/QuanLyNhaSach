@@ -54,7 +54,7 @@
                                             <h3>{{ book.name }}</h3>
                                             <span>{{ book.publisherName }}</span>
                                             <div class="item-price">${{ book.price }}
-                                            <i class="far fa-heart"></i>
+                                            <i class="far fa-heart" id="heart-{{ book.id }}" data-book-id="{{ book.id }}" data-user-id="{{ current_user.id }}"></i>
                                             </div>
                                         </figcaption>
                                         <input type="hidden" name="book_id" value="{{ book.id }}">
@@ -74,4 +74,56 @@
         </div>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const hearts = document.querySelectorAll('.fa-heart');
+
+    hearts.forEach(heart => {
+        heart.addEventListener('click', function() {
+            const bookId = this.getAttribute('data-book-id');
+            const userId = this.getAttribute('data-user-id');
+
+            // Kiểm tra trạng thái của trái tim
+            const isLiked = this.classList.contains('fas');
+
+            // Gửi yêu cầu AJAX để thêm hoặc xóa sản phẩm khỏi bảng yêu thích
+            const action = isLiked ? 'remove' : 'add';
+
+            fetch('/toggle_favorite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    book_id: bookId,
+                    user_id: userId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật trạng thái trái tim
+                    if (isLiked) {
+                        this.classList.remove('fas');
+                        this.classList.add('far');
+                        this.style.color = ''; // Trở về màu mặc định
+                    } else {
+                        this.classList.remove('far');
+                        this.classList.add('fas');
+                        this.style.color = 'red'; // Chuyển sang màu đỏ
+                    }
+                } else {
+                    alert(data.message); // Hiển thị thông báo nếu có lỗi
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error processing your request.');
+            });
+        });
+    });
+});
+
+</script>
 {%endblock%}
