@@ -55,6 +55,8 @@ def user_login_page():
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
+
+
 @app.route('/register' , methods = ['GET','POST'])
 def register_page():
     msg = None
@@ -76,16 +78,14 @@ def register_page():
             msg = "Xac nhan mat khau chua dung"
     return render_template("register.html" , err_msg = msg)
 
-@app.route('/admin')
-def admin_page():
-    if session.get('user_role') == 'admin':
-        return render_template('admin.html')
-    return redirect(url_for('user_login_page'))
+
 @app.route('/sale-employee')
+# @login_required()
 def sale_employee_page():
     if session.get('user_role') == 'sale':
         return render_template('sale_employee.html')
     return redirect(url_for('user_login_page'))
+
 @app.route('/payment' , methods=['POST'])
 def payment_page():
     return render_template('payment.html')
@@ -203,5 +203,26 @@ def update_quantity():
 
     return redirect('/cart')  # Quay lại trang giỏ hàng
 
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect('/admin')
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = dao.auth_user(username, password)
+
+        if user and user.user_role == UserRole.ADMIN:
+            login_user(user)
+            return redirect('/admin')
+        else:
+            flash('Invalid username or password or not admin role', 'error')
+
+    return render_template('admin/login.html')
+
 if __name__ == '__main__':
+    from bookstoremanagement.admin import *
+
     app.run(debug=True)

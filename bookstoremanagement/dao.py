@@ -62,10 +62,10 @@ def add_user(name , username , password , avatar , email ):
 
 
 def auth_user(username, password):
-
-    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
-
-    return User.query.filter(User.username.__eq__(username),User.password.__eq__(password)).first()
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    
+    return User.query.filter(User.username.__eq__(username.strip()),
+                           User.password.__eq__(password)).first()
 
 
 def load_user_by_id(user_id):

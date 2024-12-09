@@ -1,0 +1,7 @@
+{% extends 'admin/base.html' %} {% block body %} {% if
+current_user.is_authenticated %}
+<div class="container">
+  <h1>Welcome to Admin Dashboard</h1>
+  <p>You are logged in as: {{ current_user.name }}</p>
+</div>
+{% endif %} {% endblock %}

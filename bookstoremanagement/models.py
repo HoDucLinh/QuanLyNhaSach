@@ -1,6 +1,5 @@
 import hashlib
 from datetime import date
-
 from flask import json
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
@@ -14,6 +13,10 @@ class UserRole(PyEnum):
     ADMIN = 1
     SALE = 2
     USER = 3
+    
+    @classmethod
+    def choices(cls):
+        return [(choice.value, choice.name) for choice in cls]
 
 
 class User(db.Model , UserMixin):
@@ -32,6 +35,8 @@ class User(db.Model , UserMixin):
     reports = relationship('Report', backref='report', lazy=True)
     # 1 nhân viên có the tạo nhiều hóa đơn nhập kho
     stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
+    #1 customer có thể có nhiều sách yêu thích
+    favorites = relationship('Favorite', backref='customer', lazy=True)
 
     def __str__(self):
         return self.name
@@ -66,9 +71,10 @@ class Book(db.Model):
     name = db.Column(db.String(100) ,nullable=False)
     price = db.Column(db.Float)
     publisherName = db.Column(db.String(100))
-    image = Column(db.String(200), nullable=True)
+    image = db.Column(db.String(200), nullable=True)
     description = db.Column(db.String(300))
-    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
+    category_id = db.Column(Integer, ForeignKey('category.id'), nullable=False)
+    favorites = relationship('Favorite', backref='book', lazy=True)
 
     def __str__(self):
         return self.name
@@ -77,7 +83,7 @@ class Book(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     name = db.Column(db.String(100),nullable=False)
-    stock_id = Column(Integer, ForeignKey('stock.id'), nullable=False)
+    stock_id = db.Column(Integer, ForeignKey('stock.id'), nullable=False)
     books = relationship(Book, backref='category', lazy=True)
 
     def __str__(self):
@@ -86,7 +92,8 @@ class Category(db.Model):
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    categories = relationship('Category' ,backref='Stock', lazy=True)
+    name = db.Column(db.String(100), nullable=False)  # Thêm cột name
+    categories = relationship('Category' ,backref='stock', lazy=True)
 
     def __str__(self):
         return self.name
@@ -129,10 +136,17 @@ class DetailInvoice(db.Model):
     def __str__(self):
         return self.name
 
+
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
+    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        stock = Stock()
+        stock = Stock(name = "Kho sach chinh")
         db.session.add(stock)
         db.session.commit()
         c1 = Category(name="Lap trinh", stock_id=1)
@@ -148,8 +162,9 @@ if __name__ == "__main__":
         db.session.commit()
         new_user1 = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("hdl".encode('utf-8')).hexdigest()),email='hdl@gmail.com')
         new_user2 = User(name='Nguyen Quang Khanh',username='NQK',password= str(hashlib.md5("nqk".encode('utf-8')).hexdigest()),email='nqk@gmail.com')
+        admin_user = User(name='Admin',username='admin',password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),user_role=UserRole.ADMIN)
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add_all([new_user1,new_user2])
+        db.session.add_all([new_user1,new_user2,admin_user])
         db.session.commit()
         sale_invoices = [
             SaleInvoice(id=1, paymentStatus="Paid", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
@@ -166,4 +181,12 @@ if __name__ == "__main__":
         ]
 
         db.session.add_all(detail_invoices)
+        db.session.commit()
+        favorites = [
+            Favorite(book_id=1, customer_id=1),
+            Favorite(book_id=8, customer_id=1),
+            Favorite(book_id=3, customer_id=2),
+            Favorite(book_id=5, customer_id=2),
+        ]
+        db.session.add_all(favorites)
         db.session.commit()
