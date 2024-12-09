@@ -8,6 +8,7 @@ from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app ,db
 from flask_login import UserMixin
+from flask_admin import Admin
 
 
 class UserRole(PyEnum):
@@ -37,6 +38,8 @@ class User(db.Model , UserMixin):
         return self.name
 
 
+# Lớp Report kế thừa từ db.Model để tạo bảng Report trong cơ sở dữ liệu
+# Dùng để lưu trữ các báo cáo do admin tạo ra
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     reportDate = db.Column(db.Date)
@@ -148,8 +151,10 @@ if __name__ == "__main__":
         db.session.commit()
         new_user1 = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("hdl".encode('utf-8')).hexdigest()),email='hdl@gmail.com')
         new_user2 = User(name='Nguyen Quang Khanh',username='NQK',password= str(hashlib.md5("nqk".encode('utf-8')).hexdigest()),email='nqk@gmail.com')
+        new_user3 = User(name='Sale1', username='sale12',
+                         password=str(hashlib.md5("123".encode('utf-8')).hexdigest()), email='sale@gmail.com', user_role=UserRole.SALE)
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add_all([new_user1,new_user2])
+        db.session.add_all([new_user1,new_user2, new_user3])
         db.session.commit()
         sale_invoices = [
             SaleInvoice(id=1, paymentStatus="Paid", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
@@ -167,3 +172,5 @@ if __name__ == "__main__":
 
         db.session.add_all(detail_invoices)
         db.session.commit()
+
+        admin = Admin(app=app, name='Book Store', template_mode='boostrap4')

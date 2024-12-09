@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, session, url_for, jsonify,
 from sqlalchemy import func
 
 from bookstoremanagement import app, dao, db , login
-from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
+from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice, UserRole
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 
@@ -46,6 +46,9 @@ def user_login_page():
         user = dao.auth_user(username, password)
         if user:
             login_user(user)
+            # Kiểm tra User Role xem có phải là Sale không
+            if user.user_role == UserRole.SALE:
+                return redirect('/sale-employee')
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
@@ -55,6 +58,8 @@ def user_login_page():
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
+
+
 @app.route('/register' , methods = ['GET','POST'])
 def register_page():
     msg = None
@@ -76,20 +81,21 @@ def register_page():
             msg = "Xac nhan mat khau chua dung"
     return render_template("register.html" , err_msg = msg)
 
-@app.route('/admin')
-def admin_page():
-    if session.get('user_role') == 'admin':
-        return render_template('admin.html')
-    return redirect(url_for('user_login_page'))
+
 @app.route('/sale-employee')
+# @login_required()
 def sale_employee_page():
-    if session.get('user_role') == 'sale':
-        return render_template('sale_employee.html')
-    return redirect(url_for('user_login_page'))
+    if current_user.user_role == UserRole.SALE:
+        return render_template('/sale_employee.html')
+    return redirect('/')
+
+@app.route('/create-invoice')
+def create_invoice():
+    return render_template('create_invoice.html')
+
 @app.route('/payment' , methods=['POST'])
 def payment_page():
     return render_template('payment.html')
-
 
 @app.route('/account')
 @login_required
@@ -204,4 +210,6 @@ def update_quantity():
     return redirect('/cart')  # Quay lại trang giỏ hàng
 
 if __name__ == '__main__':
+    #from bookstoremanagement.admin import *
+
     app.run(debug=True)
