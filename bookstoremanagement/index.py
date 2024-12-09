@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, session, url_for, jsonify,
 from sqlalchemy import func
 
 from bookstoremanagement import app, dao, db , login
-from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
+from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice, Favorite
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 
@@ -114,7 +114,8 @@ def payment_page():
 @login_required
 def account_page():
     invoices = dao.load_invoice(current_user.id)  # Lấy hóa đơn cho user hiện tại
-    return render_template('accountcustomer.html', invoices=invoices)
+    favorites = dao.load_favorite(current_user.id) #lấy danh sách sách yêu thích của người dùng
+    return render_template('accountcustomer.html', invoices=invoices , favorites= favorites)
 
 
 @app.route('/cart')
@@ -183,6 +184,28 @@ def remove_from_cart():
         db.session.commit()
 
     return redirect('/cart')  # Quay lại trang giỏ hàng sau khi xóa
+
+
+@app.route('/delete_from_favorite' , methods=['POST'])
+def delete_from_favorite():
+    user_id = current_user.id
+    if not user_id:
+        return redirect('/login')  # Nếu chưa đăng nhập, chuyển hướng tới trang login
+
+    book_id = request.form.get('book_id')
+
+    # Truy vấn favorite của người dùng
+    fa = Favorite.query.filter_by(customer_id=user_id).first()
+    if not fa:
+        return redirect('/account')  # Nếu không có giỏ hàng, quay lại trang giỏ hàng
+
+    # Xóa sản phẩm khỏi giỏ hàng
+    favorite_detail = Favorite.query.filter_by(id=fa.id, book_id=book_id).first()
+    if favorite_detail:
+        db.session.delete(favorite_detail)
+        db.session.commit()
+
+    return redirect('/account')  # Quay lại trang giỏ hàng sau khi xóa
 
 
 @app.route('/logout')

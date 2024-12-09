@@ -28,8 +28,6 @@
                     </li>
                     {% endfor %}
                 </ul>
-
-
                 <div class="tab-content">
                     <div id="all-genre" data-tab-content class="active">
                         <ul class="pagination justify-content-center" style="margin:20px 0">
@@ -55,7 +53,9 @@
                                         <figcaption>
                                             <h3>{{ book.name }}</h3>
                                             <span>{{ book.publisherName }}</span>
-                                            <div class="item-price">${{ book.price }}</div>
+                                            <div class="item-price">${{ book.price }}
+                                            <i class="far fa-heart"></i>
+                                            </div>
                                         </figcaption>
                                         <input type="hidden" name="book_id" value="{{ book.id }}">
                                     </form>

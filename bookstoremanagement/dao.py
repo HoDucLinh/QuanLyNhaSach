@@ -3,7 +3,7 @@ import hashlib
 from sqlalchemy import func
 
 from bookstoremanagement import db, app
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, Favorite
 
 
 def load_books(cate_id=None, kw=None , page = None):
@@ -102,3 +102,12 @@ def load_invoice(user_id):
         .all()
     )
     return invoices
+
+
+def load_favorite(user_id):
+    # Truy vấn các sản phẩm yêu thích của người dùng
+    favorites = Favorite.query.filter(Favorite.customer_id == user_id).all()
+
+    # Trả về thông tin sách từ bảng Book thông qua mối quan hệ
+    favorite_books = [favorite.book for favorite in favorites]
+    return favorite_books

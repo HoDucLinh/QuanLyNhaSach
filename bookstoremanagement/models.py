@@ -32,6 +32,8 @@ class User(db.Model , UserMixin):
     reports = relationship('Report', backref='report', lazy=True)
     # 1 nhân viên có the tạo nhiều hóa đơn nhập kho
     stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
+    #1 customer có thể có nhiều sách yêu thích
+    favorites = relationship('Favorite', backref='customer', lazy=True)
 
     def __str__(self):
         return self.name
@@ -69,6 +71,7 @@ class Book(db.Model):
     image = Column(db.String(200), nullable=True)
     description = db.Column(db.String(300))
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
+    favorites = relationship('Favorite', backref='book', lazy=True)
 
     def __str__(self):
         return self.name
@@ -129,6 +132,13 @@ class DetailInvoice(db.Model):
     def __str__(self):
         return self.name
 
+
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
+    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
@@ -166,4 +176,12 @@ if __name__ == "__main__":
         ]
 
         db.session.add_all(detail_invoices)
+        db.session.commit()
+        favorites = [
+            Favorite(book_id=1, customer_id=1),
+            Favorite(book_id=8, customer_id=1),
+            Favorite(book_id=3, customer_id=2),
+            Favorite(book_id=5, customer_id=2),
+        ]
+        db.session.add_all(favorites)
         db.session.commit()

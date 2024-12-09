@@ -11,9 +11,9 @@
 
 <!-- Main Content -->
 <div class="container">
-    <div class="row">
+    <div class="row justify-content-center">
         <!-- Orders Table -->
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-8 mb-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Customer Orders</h5>
@@ -58,7 +58,7 @@
         </div>
 
         <!-- Favorite Products Table -->
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-8 mb-4">
             <div class="card">
                 <div class="card-header bg-secondary text-white">
                     <h5 class="mb-0">Favorite Products</h5>
@@ -74,30 +74,24 @@
                         </tr>
                         </thead>
                         <tbody>
+                        {%for book in favorites%}
                         <tr>
-                            <td>Wireless Headphones</td>
-                            <td>Electronics</td>
-                            <td>$120.00</td>
+                            <td>{{ book.name }}</td>
+                            <td>{{ book.category.name }}</td> <!-- Assuming you have a relationship with Category -->
+                            <td>${{ book.price }}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary">View</button>
+                                <form action="/add_to_cart" method="POST" class="d-inline">
+                                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="height: 50px">Add to Cart</button>
+                                </form>
+                                <form action="/delete_from_favorite" method="POST" class="d-inline">
+                                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" style="height: 50px">Delete
+                                    </button>
+                                </form>
                             </td>
                         </tr>
-                        <tr>
-                            <td>Leather Wallet</td>
-                            <td>Accessories</td>
-                            <td>$50.00</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary">View</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Coffee Maker</td>
-                            <td>Home Appliances</td>
-                            <td>$80.00</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary">View</button>
-                            </td>
-                        </tr>
+                        {%endfor%}
                         </tbody>
                     </table>
                 </div>
