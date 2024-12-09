@@ -91,7 +91,8 @@ def sale_employee_page():
 
 @app.route('/create-invoice')
 def create_invoice():
-    return render_template('create_invoice.html')
+    books = dao.load_books()
+    return render_template('create_invoice.html', books = books)
 
 @app.route('/payment' , methods=['POST'])
 def payment_page():
