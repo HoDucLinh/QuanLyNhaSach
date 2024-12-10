@@ -24,7 +24,25 @@ def home_page():
 
 @app.route('/popular')
 def popular_page():
-    return render_template('popularbook.html')
+    # Count the number of favorites for each book, limit to top 4
+    popular_books = db.session.query(
+        Favorite.book_id,
+        func.count(Favorite.book_id).label('favorite_count')
+    ).group_by(Favorite.book_id) \
+     .order_by(func.count(Favorite.book_id).desc()) \
+     .limit(4).all()
+
+    # Now, fetch the book details based on the popular books
+    books = []
+    for book_id, favorite_count in popular_books:
+        book = Book.query.get(book_id)
+        books.append({
+            'book': book,
+            'favorite_count': favorite_count
+        })
+
+    return render_template('popularbook.html', books=books)
+
 
 @app.route('/ourstore')
 def our_store_page():

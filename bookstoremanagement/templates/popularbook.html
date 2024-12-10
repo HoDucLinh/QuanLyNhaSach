@@ -1,92 +1,55 @@
-{%extends 'layout/main.html'%}
-{%block title%}
+{% extends 'layout/main.html' %}
+
+{% block title %}
 <title>Popular Books</title>
-{%endblock%}
-{%block favicon%}
+{% endblock %}
+
+{% block favicon %}
 <link rel="icon" href="{{ url_for('static', filename='images/book.svg') }}" type="image/x-icon">
-{%endblock%}
-{%block content%}
-	<section id="popular-books">
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12">
+{% endblock %}
 
-					<div class="section-header align-center">
-						<div class="title">
-							<span>Some quality items</span>
-						</div>
-						<h2 class="section-title">Popular Books</h2>
-					</div>
+{% block content %}
+<section id="popular-books">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
 
-					<div class="product-list" data-aos="fade-up">
-						<div class="row">
+                <div class="section-header align-center">
+                    <div class="title">
+                        <span>Some quality items</span>
+                    </div>
+                    <h2 class="section-title">Popular Books</h2>
+                </div>
 
-							<div class="col-md-3">
-								<div class="product-item">
-									<figure class="product-style">
-										<img src="../static/images/product-item1.jpg" alt="Books" class="product-item">
-										<button type="button" class="add-to-cart" data-product-tile="add-to-cart">Add to
-											Cart</button>
-									</figure>
-									<figcaption>
-										<h3>Simple way of piece life</h3>
-										<span>Armor Ramsey</span>
-										<div class="item-price">$ 40.00</div>
-									</figcaption>
-								</div>
-							</div>
+                <div class="product-list" data-aos="fade-up">
+                    <div class="row">
+                        {% for item in books %}
+                        <div class="col-md-3">
+                            <div class="product-item">
+                                <figure class="product-style">
+                                    <!-- Display the book image -->
+                                    <img src="{{item.book.image}}"
+                                         alt="{{ item.book.name }}" class="product-item">
+                                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                                        <input type="hidden" name="book_id" value="{{ item.book.id }}">
+                                        <!-- Hidden input with the book ID -->
+                                        <button type="submit" class="add-to-cart">Add to Cart</button>
+                                    </form>
+                                </figure>
+                                <figcaption>
+                                    <!-- Display the book name, author, and price -->
+                                    <h3>{{ item.book.name }}</h3>
+                                    <span>{{ item.book.publisherName }}</span>
+                                    <div class="item-price">${{ item.book.price }}</div>
+                                </figcaption>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div><!--ft-books-slider-->
+                </div><!--grid-->
 
-							<div class="col-md-3">
-								<div class="product-item">
-									<figure class="product-style">
-										<img src="../static/images/product-item2.jpg" alt="Books" class="product-item">
-										<button type="button" class="add-to-cart" data-product-tile="add-to-cart">Add to
-											Cart</button>
-									</figure>
-									<figcaption>
-										<h3>Great travel at desert</h3>
-										<span>Sanchit Howdy</span>
-										<div class="item-price">$ 38.00</div>
-									</figcaption>
-								</div>
-							</div>
-
-							<div class="col-md-3">
-								<div class="product-item">
-									<figure class="product-style">
-										<img src="../static/images/product-item3.jpg" alt="Books" class="product-item">
-										<button type="button" class="add-to-cart" data-product-tile="add-to-cart">Add to
-											Cart</button>
-									</figure>
-									<figcaption>
-										<h3>The lady beauty Scarlett</h3>
-										<span>Arthur Doyle</span>
-										<div class="item-price">$ 45.00</div>
-									</figcaption>
-								</div>
-							</div>
-
-							<div class="col-md-3">
-								<div class="product-item">
-									<figure class="product-style">
-										<img src="../static/images/product-item4.jpg" alt="Books" class="product-item">
-										<button type="button" class="add-to-cart" data-product-tile="add-to-cart">Add to
-											Cart</button>
-									</figure>
-									<figcaption>
-										<h3>Once upon a time</h3>
-										<span>Klien Marry</span>
-										<div class="item-price">$ 35.00</div>
-									</figcaption>
-								</div>
-							</div>
-
-						</div><!--ft-books-slider-->
-					</div><!--grid-->
-
-
-				</div><!--inner-content-->
-			</div>
-		</div>
-	</section>
-{%endblock%}
+            </div><!--inner-content-->
+        </div>
+    </div>
+</section>
+{% endblock %}
