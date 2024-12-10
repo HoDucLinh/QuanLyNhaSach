@@ -2505,5 +2505,28 @@ footer#footer {
 .far {
     color: #ccc;  /* Màu mặc định cho trái tim */
 }
+ /* dòng chữ trong index*/
+.animated-text {
+    font-size: 30px;
+    font-weight: bold;
+    color: #ff5733; /* Màu chữ nổi bật */
+    animation: fadeInMove 3s ease-in-out infinite;
+}
+
+@keyframes fadeInMove {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
 
 

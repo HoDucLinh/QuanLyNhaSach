@@ -2,6 +2,9 @@
 {%block title%}
 <title>Our Store</title>
 {%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/shop.svg') }}" type="image/x-icon">
+{%endblock%}
 {%block content%}
 <section id="popular-books">
     <div class="container">
@@ -9,9 +12,6 @@
             <div class="col-md-12">
 
                 <div class="section-header align-center">
-                    <div class="title">
-                        <span>Our items</span>
-                    </div>
                     <h2 class="section-title">Our Books</h2>
                 </div>
 

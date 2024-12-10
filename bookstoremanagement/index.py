@@ -104,9 +104,25 @@ def sale_employee_page():
     return redirect(url_for('user_login_page'))
 
 
-@app.route('/payment' , methods=['POST'])
+@app.route('/payment', methods=['POST'])
+@login_required
 def payment_page():
-    return render_template('payment.html')
+    totalAmount = 0
+    cart_id = Cart.query.filter_by(user_id=current_user.id).first()
+    cart_details = CartDetail.query.filter_by(cart_id=cart_id.id).all()  # Ensure you're querying by cart_id
+    books = []  # Will hold full book objects
+
+    for b in cart_details:
+        book = Book.query.filter_by(id=b.book_id).first()
+        if book:
+            books.append({
+                'book': book,
+                'quantity': b.quantity
+            })
+            totalAmount += b.quantity * book.price
+
+    return render_template('payment.html', books=books, totalAmount=totalAmount)
+
 
 
 @app.route('/account')

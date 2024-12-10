@@ -4,39 +4,58 @@
             <div class="row">
                 <div class="col-md-2">
                     <div class="main-logo">
-                        <a href="index.html"><img src="{{ url_for('static', filename='images/main-logo.png') }}" alt="logo"></a>
+                        <a href="index.html"><img src="{{ url_for('static', filename='images/main-logo.png') }}"
+                                                  alt="logo"></a>
                     </div>
                 </div>
                 <div class="col-md-10">
                     <nav id="navbar">
                         <div class="main-menu stellarnav">
                             <ul class="menu-list">
-                                <li class="menu-item active"><a href="{{ url_for('home_page')}}">Home</a></li>
-                                <li class="menu-item"><a href="#" class="nav-link">About</a></li>
-                                <li class="menu-item"><a href="{{ url_for('our_store_page')}}" class="nav-link">Our Store</a></li>
-                                <li class="menu-item"><a href="{{ url_for('popular_page')}}" class="nav-link">Popular</a></li>
-                                <li class="menu-item"><a href="{{ url_for('cart_page')}}" class="cart for-buy"><i class="icon icon-clipboard"></i><span>Cart:(0$)</span></a></li>
-                                {% if current_user.is_authenticated%}
-                                <li class="menu-item has-sub"><a href="{{ url_for('account_page')}}" class="user-account for-buy"><img src="{{current_user.avatar}}" alt="" width = "25" class="rounded img-fluid" style="margin-right:5px"><span>{{current_user.name}}</span></a>
+                                <li class="menu-item {% if request.endpoint == 'home_page' %}active{% endif %}">
+                                    <a href="{{ url_for('home_page')}}">Home</a>
+                                </li>
+                                <!-- <li class="menu-item"><a href="#" class="nav-link">About</a></li> -->
+                                <li class="menu-item {% if request.endpoint == 'our_store_page' %}active{% endif %}">
+                                    <a href="{{ url_for('our_store_page')}}" class="nav-link">Our Store</a>
+                                </li>
+                                <li class="menu-item {% if request.endpoint == 'popular_page' %}active{% endif %}">
+                                    <a href="{{ url_for('popular_page')}}" class="nav-link">Popular</a>
+                                </li>
+                                <li class="menu-item {% if request.endpoint == 'cart_page' %}active{% endif %}">
+                                    <a href="{{ url_for('cart_page')}}" class="cart for-buy">
+                                        <span>Cart</span>
+                                    </a>
+                                </li>
+                                {% if current_user.is_authenticated %}
+                                <li class="menu-item has-sub {% if request.endpoint in ['account_page', 'edit_profile'] %}active{% endif %}">
+                                    <a href="{{ url_for('account_page')}}" class="user-account for-buy">
+                                        <img src="{{current_user.avatar}}" alt="" width="25" class="rounded img-fluid"
+                                             style="margin-right:5px">
+                                        <span>{{current_user.name}}</span>
+                                    </a>
                                     <ul>
-                                                <li><a href="{{ url_for('edit_profile')}}">Edit Profile</a></li>
-                                                <li><a href="{{ url_for('account_page')}}">My Account</a></li>
-                                                <li><a href="{{ url_for('logout_my_user')}}">Log out</a></li>
+                                        <li><a href="{{ url_for('edit_profile')}}">Edit Profile</a></li>
+                                        <li><a href="{{ url_for('account_page')}}">My Account</a></li>
+                                        <li><a href="{{ url_for('logout_my_user')}}">Log out</a></li>
                                     </ul>
                                 </li>
                                 {% else %}
-                                <li class="menu-item"><a href="{{ url_for('user_login_page')}}" class="user-account for-buy"><span>Sign In</span></a></li>
-                                {%endif%}
+                                <li class="menu-item {% if request.endpoint == 'user_login_page' %}active{% endif %}">
+                                    <a href="{{ url_for('user_login_page')}}"
+                                       class="user-account for-buy"><span>Sign In</span></a>
+                                </li>
+                                {% endif %}
                                 <li class="menu-item">
                                     <div class="action-menu">
-
                                         <div class="search-bar">
                                             <a href="#" class="search-button search-toggle"
                                                data-selector="#header-wrap">
                                                 <i class="icon icon-search"></i>
                                             </a>
                                             <form role="search" method="get" class="search-box">
-                                                <input class="search-field text search-input" placeholder="Search" type="search" name="q">
+                                                <input class="search-field text search-input" placeholder="Search"
+                                                       type="search" name="q">
                                             </form>
                                         </div>
                                     </div>

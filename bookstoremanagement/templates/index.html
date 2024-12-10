@@ -2,44 +2,49 @@
 {%block title%}
 <title>Home</title>
 {%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/house.svg') }}" type="image/x-icon">
+{%endblock%}
 {%block content%}
-	<section id="billboard">
+<section id="billboard">
 
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
 
-					<button class="prev slick-arrow">
-						<i class="icon icon-arrow-left"></i>
-					</button>
+                <button class="prev slick-arrow">
+                    <i class="icon icon-arrow-left"></i>
+                </button>
 
-					<div class="main-slider pattern-overlay">
-						{% if flag == 0 %}
-						<div style="height:320px"><p>Hello Anh em nha</p></div>
-						{% else %}
-						{% for b in books %}
-						<div class="slider-item">
-							<div class="banner-content">
-								<h2 class="banner-title">{{b.name}}</h2>
-								<p>{{b.description}}</p>
-								<div class="btn-wrap">
-									<a href="#" class="btn btn-outline-accent btn-accent-arrow">Read More<i
-											class="icon icon-ns-arrow-right"></i></a>
-								</div>
-							</div><!--banner-content-->
-							<img src="{{b.image}}" alt="banner" class="banner-image img-fluid">
-						</div><!--slider-item-->
-						{% endfor %}
-						{% endif %}
-					</div><!--slider-->
+                <div class="main-slider pattern-overlay">
+                    {% if flag == 0 %}
+                    <div style="height:320px; display: flex; justify-content: center; align-items: center;">
+                        <p class="animated-text">CHÀO MỪNG CÁC BẠN ĐÃ ĐẾN VỚI NHÀ SÁCH CỦA CHÚNG TÔI</p>
+                    </div>
 
-					<button class="next slick-arrow">
-						<i class="icon icon-arrow-right"></i>
-					</button>
+                    {% else %}
+                    {% for b in books %}
+                    <div class="slider-item">
+                        <div class="banner-content">
+                            <h2 class="banner-title">{{b.name}}</h2>
+                            <p>{{b.description}}</p>
+                            <div class="btn-wrap">
+                                <a href="#" class="btn btn-outline-accent btn-accent-arrow">Add to cart<i class="icon icon-ns-arrow-right"></i></a>
+                            </div>
+                        </div><!--banner-content-->
+                        <img src="{{b.image}}" alt="banner" class="banner-image img-fluid">
+                    </div><!--slider-item-->
+                    {% endfor %}
+                    {% endif %}
+                </div><!--slider-->
 
-				</div>
-			</div>
-		</div>
+                <button class="next slick-arrow">
+                    <i class="icon icon-arrow-right"></i>
+                </button>
 
-	</section>
+            </div>
+        </div>
+    </div>
+
+</section>
 {%endblock%}

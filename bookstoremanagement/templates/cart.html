@@ -2,6 +2,9 @@
 {%block title%}
 <title>My Cart</title>
 {%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/cart3.svg') }}" type="image/x-icon">
+{%endblock%}
 {% block content %}
 <!-- Cart content -->
 <div class="container my-5" id="download-app">
@@ -42,7 +45,7 @@
             <td>
                 <form method="POST" action="/remove_from_cart">
                     <input type="hidden" name="book_id" value="{{ item.book_id }}">
-                    <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                    <button class="btn" type="submit" style="height:5px"><i class="bi bi-trash3"></i></button>
                 </form>
             </td>
         </tr>
