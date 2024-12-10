@@ -1,9 +1,7 @@
 import hashlib
-
 from sqlalchemy import func
-
 from bookstoremanagement import db
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole
 
 
 def load_books(cate_id=None, kw=None):
@@ -49,6 +47,24 @@ def insert_book_to_cart(user_id , book_id ):
 
     db.session.commit()
 
+# def add_user(name, username, password, avatar, email):
+#     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+#     u = None
+#     if avatar:
+#         u = User(name=name, 
+#                 username=username, 
+#                 password=password, 
+#                 avatar=avatar, 
+#                 email=email,
+#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
+#     else:
+#         u = User(name=name, 
+#                 username=username, 
+#                 password=password, 
+#                 email=email,
+#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
+#     db.session.add(u)
+#     db.session.commit()
 
 def add_user(name , username , password , avatar , email ):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
