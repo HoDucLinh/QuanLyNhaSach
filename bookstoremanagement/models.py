@@ -73,8 +73,10 @@ class Book(db.Model):
     publisherName = db.Column(db.String(100))
     image = db.Column(db.String(200), nullable=True)
     description = db.Column(db.String(300))
+    quantity = db.Column(db.Integer)
     category_id = db.Column(Integer, ForeignKey('category.id'), nullable=False)
     favorites = relationship('Favorite', backref='book', lazy=True)
+
 
     def __str__(self):
         return self.name

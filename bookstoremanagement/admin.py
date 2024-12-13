@@ -6,6 +6,7 @@ from flask_login import current_user, logout_user
 from flask import redirect, url_for
 from wtforms import SelectField, PasswordField, validators
 import dao
+from flask import request
 
 
 # Base ModelView với kiểm tra quyền
@@ -103,8 +104,8 @@ class StockView(AuthModelView):
 class BookView(AuthModelView):
     can_view_details = True
     column_searchable_list = ['name', 'publisherName']
-    form_columns = ['name', 'price', 'publisherName', 'image', 'description', 'category_id']
-    column_list = ['id', 'name', 'price', 'publisherName', 'category_id']  # Thêm các cột muốn hiển thị
+    form_columns = ['name', 'price', 'publisherName', 'image', 'description', 'category_id','quantity']
+    column_list = ['id', 'name', 'price', 'publisherName', 'category_id', 'quantity']  # Thêm các cột muốn hiển thị
 
     def get_category_choices(self):
         return [(category.id, category.name) for category in Category.query.all()]
@@ -174,7 +175,13 @@ class LogoutView(BaseView):
 class StatsView(BaseView):
     @expose('/')
     def index(self):
-        return self.render('admin/stats.html')
+        kw = request.args.get('kw')
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        return self.render('admin/stats.html',
+                           stats = dao.category_revenue_stats(kw=kw,
+                                                              from_date=from_date,
+                                                              to_date=to_date))
 
 # Custom AdminIndexView với kiểm tra quyền
 class MyAdminIndexView(AdminIndexView):

@@ -108,3 +108,24 @@ def category_stats():
     return db.session.query(Category.id, Category.name, func.count(Book.id))\
                      .join(Book, Category.id.__eq__(Book.category_id), isouter=True)\
                      .group_by(Category.id, Category.name).all()
+
+def category_revenue_stats(kw=None, from_date=None, to_date=None):
+    p = (db.session.query(
+        Category.id,
+        Category.name,
+        func.sum(DetailInvoice.quantity * Book.price).label('revenue'))\
+         .join(Book, Category.id.__eq__(Book.category_id))\
+         .join(DetailInvoice, DetailInvoice.book_id.__eq__(Book.id), isouter=True)\
+         .join(SaleInvoice, SaleInvoice.id.__eq__(DetailInvoice.saleInvoice_id), isouter=True)\
+         .group_by(Category.id, Category.name))
+
+    if kw:
+        p = p.filter(Category.name.contains(kw))
+
+    if from_date:
+        p = p.filter(SaleInvoice.orderDate.__ge__(from_date))
+
+    if to_date:
+        p = p.filter(SaleInvoice.orderDate.__le__(to_date))
+
+    return p.all()

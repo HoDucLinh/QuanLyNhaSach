@@ -2,7 +2,7 @@
 current_user.is_authenticated %}
 <div class="container">
   <h1>Welcome to Admin Dashboard</h1>
-  <p>Ban dang dang nhap voi: {{ current_user.name }}</p>
+  <p>You are logged in: {{ current_user.name }}</p>
   <div class="row">
     <div class="col-md-5 col-xs-12">
       <table class="table">
@@ -38,7 +38,7 @@ current_user.is_authenticated %}
       r = Math.random() * 255;
       g = Math.random() * 255;
       b = Math.random() * 255;
-      colors.push(`rgb(${r}, ${g}, ${b}, 0.2)`)
+      colors.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
       borderColors.push(`rgb(${r}, ${g}, ${b}, 1)`)
     {% endfor %}
 
