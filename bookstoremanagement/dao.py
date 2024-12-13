@@ -3,7 +3,6 @@ from sqlalchemy import func
 from bookstoremanagement import db
 from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole
 
-
 def load_books(cate_id=None, kw=None):
     query = Book.query
 
@@ -103,3 +102,9 @@ def load_invoice(user_id):
         .all()
     )
     return invoices
+
+# dem so luong sp trong tung cate ghi de len trang chu
+def category_stats():
+    return db.session.query(Category.id, Category.name, func.count(Book.id))\
+                     .join(Book, Category.id.__eq__(Book.category_id), isouter=True)\
+                     .group_by(Category.id, Category.name).all()

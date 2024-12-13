@@ -5,14 +5,8 @@ from bookstoremanagement.models import *
 from flask_login import current_user, logout_user
 from flask import redirect, url_for
 from wtforms import SelectField, PasswordField, validators
+import dao
 
-# Custom AdminIndexView với kiểm tra quyền
-class MyAdminIndexView(AdminIndexView):
-    @expose('/')
-    def index(self):
-        if not current_user.is_authenticated or current_user.user_role != UserRole.ADMIN:
-            return redirect(url_for('admin_login'))
-        return super(MyAdminIndexView, self).index()
 
 # Base ModelView với kiểm tra quyền
 class AuthModelView(ModelView):
@@ -177,6 +171,21 @@ class LogoutView(BaseView):
         logout_user()
         return redirect('/admin')
 
+class StatsView(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('admin/stats.html')
+
+# Custom AdminIndexView với kiểm tra quyền
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        if not current_user.is_authenticated or current_user.user_role != UserRole.ADMIN:
+            return redirect(url_for('admin_login'))
+        # return super(MyAdminIndexView, self).index()
+        return self.render('admin/index.html',
+                           stats = dao.category_stats()) # tự render ra template để truyền biểu đồ
+
 # Khởi tạo Admin với custom index view
 admin = Admin(app=app, name='Book Store Admin', template_mode='bootstrap4', 
              index_view=MyAdminIndexView())
@@ -191,4 +200,5 @@ admin.add_view(StockView(Stock, db.session, name='Stocks'))
 # admin.add_view(SaleInvoiceView(SaleInvoice, db.session, name='Sale Invoices'))
 # admin.add_view(DetailInvoiceView(DetailInvoice, db.session, name='Invoice Details'))
 admin.add_view(ReportView(Report, db.session, name='Reports'))
+admin.add_view((StatsView(name='Thống kê báo cáo')))
 admin.add_view((LogoutView(name='Đăng xuất')))

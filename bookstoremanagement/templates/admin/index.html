@@ -2,6 +2,72 @@
 current_user.is_authenticated %}
 <div class="container">
   <h1>Welcome to Admin Dashboard</h1>
-  <p>You are logged in as: {{ current_user.name }}</p>
+  <p>Ban dang dang nhap voi: {{ current_user.name }}</p>
+  <div class="row">
+    <div class="col-md-5 col-xs-12">
+      <table class="table">
+        <tr>
+          <th>Ma danh muc</th>
+          <th>Ten danh muc</th>
+          <th>So luong san pham</th>
+        </tr>
+        {% for s in stats %}
+        <tr>
+          <td>{{ s[0] }}</td>
+          <td>{{ s[1] }}</td>
+          <td>{{ s[2] }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="col-md-6 col-xs-12">
+      <canvas id="myCategoryChart"></canvas>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let labels=[], info=[]
+    let r, g, b;
+    let colors = [];
+    let borderColors = [];
+
+    {% for s in stats %}
+      labels.push('{{ s[1] }}')
+      info.push({{ s[2] }})
+
+      r = Math.random() * 255;
+      g = Math.random() * 255;
+      b = Math.random() * 255;
+      colors.push(`rgb(${r}, ${g}, ${b}, 0.2)`)
+      borderColors.push(`rgb(${r}, ${g}, ${b}, 1)`)
+    {% endfor %}
+
+    window.onload = function () {
+      const ctx = document.getElementById("myCategoryChart");
+      new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Thống kê sản phẩm theo danh mục",
+              data: info,
+              backgroundColor: colors,
+              borderColor: borderColors,
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    };
+  </script>
 </div>
+
 {% endif %} {% endblock %}
