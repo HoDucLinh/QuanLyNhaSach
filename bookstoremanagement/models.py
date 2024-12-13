@@ -1,5 +1,5 @@
 import hashlib
-from datetime import date
+from datetime import date, datetime
 
 from flask import json
 from sqlalchemy import Column, Integer, ForeignKey, String
@@ -70,6 +70,7 @@ class Book(db.Model):
     publisherName = db.Column(db.String(100))
     image = Column(db.String(200), nullable=True)
     description = db.Column(db.String(300))
+    quantity = db.Column(db.Integer)
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     favorites = relationship('Favorite', backref='book', lazy=True)
 
@@ -115,9 +116,13 @@ class CartDetail(db.Model):
 class SaleInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     paymentStatus = db.Column(db.String(100))
-    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # Khóa ngoại tới khách hàng
-    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)  # Khóa ngoại tới nhân viên bán hàng
-    orderDate = db.Column(db.Date)
+    #nếu mua onl thì lấy tên thông qua customer_id , nếu mua off thì điền thẳng tên
+    customer_name = db.Column(db.String(100) , nullable = False)
+    #lưu id của khách hang , nếu = null thì là mua off , nếu c giá trị là mua onl
+    customer_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    #lưu id của sale , neu null là mua onl ,neeseu có gia trị là mua off
+    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    orderDate = db.Column(db.Date,default=datetime.utcnow())
 
     def __str__(self):
         return self.name
@@ -162,17 +167,17 @@ if __name__ == "__main__":
         db.session.add_all([new_user1,new_user2])
         db.session.commit()
         sale_invoices = [
-            SaleInvoice(id=1, paymentStatus="Paid", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
-            SaleInvoice(id=2, paymentStatus="Pending", customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
-            SaleInvoice(id=3, paymentStatus="Paid", customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
+            SaleInvoice(id=1, paymentStatus="Paid",customer_name ="Ho Duc Linh", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
+            SaleInvoice(id=2, paymentStatus="Pending",customer_name ="Ho Duc Linh", customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
+            SaleInvoice(id=3, paymentStatus="Paid",customer_name ="Nguyen Quang Khanh", customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
         ]
 
         db.session.add_all(sale_invoices)
         db.session.commit()
         detail_invoices = [
-            DetailInvoice(id=1, book_id=1, saleInvoice_id=1, quantity=2),  # 2 quyển Python Basics
-            DetailInvoice(id=2, book_id=2, saleInvoice_id=1, quantity=1),  # 1 quyển Flask Web Development
-            DetailInvoice(id=3, book_id=3, saleInvoice_id=2, quantity=3),  # 3 quyển Database Design
+            DetailInvoice(id=1, book_id=1, saleInvoice_id=1, quantity=2),
+            DetailInvoice(id=2, book_id=2, saleInvoice_id=1, quantity=1),
+            DetailInvoice(id=3, book_id=3, saleInvoice_id=2, quantity=3),
         ]
 
         db.session.add_all(detail_invoices)
