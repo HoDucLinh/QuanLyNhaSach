@@ -1,3 +1,5 @@
+from calendar import month
+
 from flask_admin import Admin, AdminIndexView, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
 from bookstoremanagement import app, db
@@ -7,6 +9,7 @@ from flask import redirect, url_for
 from wtforms import SelectField, PasswordField, validators
 import dao
 from flask import request
+from datetime import datetime
 
 
 # Base ModelView với kiểm tra quyền
@@ -178,7 +181,15 @@ class StatsView(BaseView):
         kw = request.args.get('kw')
         from_date = request.args.get('from_date')
         to_date = request.args.get('to_date')
+        year = request.args.get('year', datetime.now().year)
+        month = request.args.get('month')
+        
+        if month:
+            month = int(month)
+
         return self.render('admin/stats.html',
+                           month_stats = dao.category_revenue_month(year = year),
+                           book_stats = dao.book_quantity_month(year = year, month = month),
                            stats = dao.category_revenue_stats(kw=kw,
                                                               from_date=from_date,
                                                               to_date=to_date))
