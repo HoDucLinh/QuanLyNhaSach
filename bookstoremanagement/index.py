@@ -1,10 +1,10 @@
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
-
 from bookstoremanagement import app, dao, db , login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
+from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
 
@@ -224,5 +224,5 @@ def admin_login():
 
 if __name__ == '__main__':
     from bookstoremanagement.admin import *
-
+    init_scheduler()
     app.run(debug=True)

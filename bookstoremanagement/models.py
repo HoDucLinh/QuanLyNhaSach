@@ -7,6 +7,7 @@ from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app ,db
 from flask_login import UserMixin
+from datetime import datetime
 
 
 class UserRole(PyEnum):
@@ -143,6 +144,15 @@ class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
     customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    
+
+class Regulation(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
+    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn tối thiểu trước khi nhập
+    order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
+    updated_date = db.Column(db.DateTime, default=datetime.now())
+    updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)
 
 
 if __name__ == "__main__":

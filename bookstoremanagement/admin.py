@@ -1,5 +1,4 @@
 from calendar import month
-
 from flask_admin import Admin, AdminIndexView, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
 from bookstoremanagement import app, db
@@ -208,6 +207,19 @@ class MyAdminIndexView(AdminIndexView):
 admin = Admin(app=app, name='Book Store Admin', template_mode='bootstrap4', 
              index_view=MyAdminIndexView())
 
+class RegulationView(AuthModelView):
+    can_create = True  # Cho phép tạo mới
+    can_delete = True  # Cho phép xóa
+    column_list = ['min_import_quantity', 'min_stock_before_import', 
+                  'order_cancel_time', 'updated_date', 'updated_by']
+    form_columns = ['min_import_quantity', 'min_stock_before_import', 'order_cancel_time']
+    
+    def on_model_change(self, form, model, is_created):
+        model.updated_date = datetime.now()
+        model.updated_by = current_user.id
+
+
+
 # Đăng ký các ModelView
 admin.add_view(UserView(User, db.session, name='Users'))
 admin.add_view(BookView(Book, db.session, name='Books'))
@@ -220,3 +232,4 @@ admin.add_view(StockView(Stock, db.session, name='Stocks'))
 admin.add_view(ReportView(Report, db.session, name='Reports'))
 admin.add_view((StatsView(name='Thống kê báo cáo')))
 admin.add_view((LogoutView(name='Đăng xuất')))
+admin.add_view(RegulationView(Regulation, db.session, name='Quy định'))

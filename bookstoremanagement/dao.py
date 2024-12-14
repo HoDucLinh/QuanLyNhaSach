@@ -1,10 +1,10 @@
 import hashlib
 from itertools import groupby
-
 from sqlalchemy import func
 from bookstoremanagement import db
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, Regulation
 from sqlalchemy.sql import extract
+from datetime import datetime, timedelta
 
 def load_books(cate_id=None, kw=None):
     query = Book.query
@@ -156,3 +156,30 @@ def book_quantity_month(year, month=None):
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
         
     return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
+
+# ========================= KIỂM TRA QUY ĐỊNH
+def get_current_regulations():
+    return Regulation.query.order_by(Regulation.updated_date.desc()).first()
+
+# kiểm tra điều kiện nhập hàng
+def check_import_conditions(book_id):
+    regulations = get_current_regulations()
+    book = Book.query.get(book_id)
+    
+    if book.quantity >= regulations.min_stock_before_import:
+        return False, f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
+        
+    return True, None
+
+# kiểm tra hủy đơn tự động
+def check_order_cancellation():
+    regulations = get_current_regulations()
+    cancel_time = regulations.order_cancel_time
+    
+    # Tìm các đơn hàng quá hạn
+    overdue_orders = SaleInvoice.query.filter(
+        SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
+        SaleInvoice.paymentStatus == 'Pending'
+    ).all()
+    
+    return overdue_orders
