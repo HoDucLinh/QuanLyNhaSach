@@ -1,7 +1,6 @@
 
 from bookstoremanagement import db, app
 import hashlib
-from itertools import groupby
 from sqlalchemy import func
 from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, \
     Regulation, Favorite

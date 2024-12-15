@@ -84,6 +84,8 @@ def user_login_page():
             # Kiểm tra nếu là admin thì chuyển về trang admin
             if user.user_role == UserRole.ADMIN:
                 return redirect('/admin')
+            if user.user_role == UserRole.SALE:
+                return render_template('sale_employee.html')
             # Nếu không phải admin thì chuyển về trang chủ
             return redirect('/')
         else:
@@ -156,12 +158,6 @@ def view_books():
     return render_template('view_books.html', books=books, categories=categories, selected_category_name=selected_category_name)
 
 
-@app.route('/payment', methods=['POST'])
-@login_required
-# Quản lý Khách hàng ( Customer Offline)
-@app.route('/view-customers', methods = ['GET'])
-# Quản lý Đơn hàng ( Buy online and get offline)
-# Tạo hóa đơn
 @app.route('/create-invoice', methods=['GET', 'POST'])
 def create_invoice():
     books = dao.load_books()

@@ -205,8 +205,11 @@ if __name__ == "__main__":
         # ]
         # db.session.add_all(favorites)
         # db.session.commit()
-        admin_user = User(name='Admin', username='admin', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
-                          user_role=UserRole.ADMIN)
-        db.session.add(admin_user)
+        # admin_user = User(name='Admin', username='admin', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+        #                   user_role=UserRole.ADMIN)
+        new_user3 = User(name='Sale1', username='sale12',
+                         password=str(hashlib.md5("123".encode('utf-8')).hexdigest()), email='sale@gmail.com',
+                         user_role=UserRole.SALE)
+        db.session.add(new_user3)
         db.session.commit()
 
