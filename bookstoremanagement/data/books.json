@@ -4,6 +4,7 @@
   "publisherName": "Allen B. Downey",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598215/or1fkdx65mg2bkeft7di.jpg",
   "description": "Lap trinh python cuc hay , cuc de hieu",
+  "quantity": 150,
   "category_id": 1
 },
 {
@@ -12,6 +13,7 @@
   "publisherName": "Jeff Atwood",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598466/large_sach_day_lap_trinh_co_ban_4d791265e2_h9vqkt.jpg",
   "description": "tuyet voi",
+  "quantity": 150,
   "category_id": 1
 },
 {
@@ -20,6 +22,7 @@
   "publisherName": "Phạm Văn Ất",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598619/x4si8_T_Ls_S_Zq5cy_XG_Hl_Il_M8w_Di_Su_J4_U_Bz_Bn_Z28_Z5m_L_Alpe4a_F_eaf2eeed4f_ky19dy.jpg",
   "description": "Tot lam",
+  "quantity": 150,
   "category_id": 1
 },
 {
@@ -28,6 +31,7 @@
   "publisherName": "Cố Mạn",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598801/sach-ben-nhau-tron-doi-600x921_z4xhrm.jpg",
   "description": "Hay",
+  "quantity": 150,
   "category_id": 2
 },
 {
@@ -36,6 +40,7 @@
   "publisherName": "Diệp Lạc Vô Tâm",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598921/mai-mai-la-bao-xa-sach-nt_jssaod.jpg",
   "description": "Me lam",
+  "quantity": 150,
   "category_id": 2
 }, {
   "name": "Yêu em từ cái nhìn đầu tiên",
@@ -43,6 +48,7 @@
   "publisherName": "Cố Mạn",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732598993/yeu-em-tu-cai-nhin-dau-tien-sach_zhvzfn.jpg",
   "description": "So 1 long toi",
+  "quantity": 150,
   "category_id": 1
 }, {
   "name": "Hoàng Tử Bé",
@@ -50,6 +56,7 @@
   "publisherName": "Antoine De Saint-Exupéry",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732599365/10-cuon-sach-thieu-nhi-hay-bo-ich-co-tinh-giao-duc-cao-202303110736564138_gcwpey.jpg",
   "description": "Hay ghe luon",
+  "quantity": 150,
   "category_id": 3
 
 }, {
@@ -58,6 +65,7 @@
   "publisherName": "Lewis Carroll",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732599465/10-cuon-sach-thieu-nhi-hay-bo-ich-co-tinh-giao-duc-cao-202303110737151888_qqjqov.jpg",
   "description": "toi rat thich",
+  "quantity": 150,
   "category_id": 3
 },{
   "name": "Charlie và nhà máy Sô-cô-la",
@@ -65,6 +73,7 @@
   "publisherName": "Roald Dahl",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732599587/10-cuon-sach-thieu-nhi-hay-bo-ich-co-tinh-giao-duc-cao-202303110737332796_s3ijai.jpg",
   "description": "hay",
+  "quantity": 150,
   "category_id": 3
 },{
   "name": "Những tấm lòng cao cả",
@@ -72,5 +81,6 @@
   "publisherName": "Edmondo De Amicis",
   "image": "https://res.cloudinary.com/dzwsdpjgi/image/upload/v1732599655/10-cuon-sach-thieu-nhi-hay-bo-ich-co-tinh-giao-duc-cao-202303110738136187_twemlg.jpg",
   "description": "tuyet",
+  "quantity": 150,
   "category_id": 3
 }]
