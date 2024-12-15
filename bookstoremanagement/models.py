@@ -9,6 +9,14 @@ from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app ,db
 from flask_login import UserMixin
 
+class UserRole(PyEnum):
+    ADMIN = 1
+    SALE = 2
+    USER = 3
+
+    @classmethod
+    def choices(cls):
+        return [(choice.value, choice.name) for choice in cls]
 
 class UserRole(PyEnum):
     ADMIN = 1
@@ -90,7 +98,8 @@ class Category(db.Model):
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    categories = relationship('Category' ,backref='Stock', lazy=True)
+    name = db.Column(db.String(100), nullable=False)  # Thêm cột name
+    categories = relationship('Category' ,backref='stock', lazy=True)
 
     def __str__(self):
         return self.name
@@ -143,11 +152,18 @@ class Favorite(db.Model):
     book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
     customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
+class Regulation(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
+    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn tối thiểu trước khi nhập
+    order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
+    updated_date = db.Column(db.DateTime, default=datetime.now())
+    updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        stock = Stock()
+        stock = Stock(name = "Kho sach chinh")
         db.session.add(stock)
         db.session.commit()
         c1 = Category(name="Lap trinh", stock_id=1)

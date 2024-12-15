@@ -8,6 +8,7 @@ from bookstoremanagement import app, dao, db , login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice, Favorite
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
+from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
 
@@ -342,5 +343,26 @@ def toggle_favorite():
 
     return jsonify({'success': False, 'message': 'Invalid action'})
 
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect('/admin')
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = dao.auth_user(username, password)
+
+        if user and user.user_role == UserRole.ADMIN:
+            login_user(user)
+            return redirect('/admin')
+        else:
+            flash('Invalid username or password or not admin role', 'error')
+
+    return render_template('admin/login.html')
+
 if __name__ == '__main__':
+    from bookstoremanagement.admin import *
+    init_scheduler()
     app.run(debug=True)
