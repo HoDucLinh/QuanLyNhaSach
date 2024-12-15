@@ -1,4 +1,3 @@
-from flask import Flask
 from flask_apscheduler import APScheduler
 from bookstoremanagement import app, dao, db
 

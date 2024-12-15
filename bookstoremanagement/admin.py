@@ -1,7 +1,6 @@
 from calendar import month
 from flask_admin import Admin, AdminIndexView, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
-from bookstoremanagement import app, db
 from bookstoremanagement.models import *
 from flask_login import current_user, logout_user
 from flask import redirect, url_for
@@ -48,19 +47,6 @@ class UserView(AuthModelView):
         # Lấy role từ form
         model.user_role = UserRole(form.user_role.data)
 
-# class UserView(AuthModelView):
-#     can_view_details = True
-#     column_exclude_list = ['password'] # ẩn pass trên lsv
-#     form_excluded_columns = ['password'] # ẩn pass khi tạo or chỉnh sửa
-#     column_searchable_list = ['username', 'name', 'email']
-#
-#     # ghi đè để tùy chỉnh biểu mẫu
-#     def scaffold_form(self):
-#         form_class = super(UserView, self).scaffold_form()
-#         form_class.user_role = SelectField('User Role',
-#                                          choices=UserRole.choices(),
-#                                          coerce=int)
-#         return form_class
 
 class CategoryView(AuthModelView):
     can_view_details = True
@@ -87,18 +73,7 @@ class CategoryView(AuthModelView):
         form = super(CategoryView, self).edit_form(obj)
         form.stock_id.choices = self.get_stock_choices()  # Cập nhật choices khi sửa form
         return form
-#
-# Code cũ không dùng được drop down
-# class CategoryView(ModelView):
-#     can_view_details = True
-#     column_searchable_list = ['name']
-#    # form_columns = ['name', 'stock_id'] # hiển thị khi CE
-#     column_list = ['name', 'stock_id'] # hiển thị ở lsv
-#
-#     def on_form_prefill(self, form, id):
-#         category = Category.query.get(id)
-#         if category:
-#             form.stock_id.data = category.stock.name
+
 
 class StockView(AuthModelView):
     column_list = ['id', 'name']
@@ -129,15 +104,7 @@ class BookView(AuthModelView):
         form.category_id.choices = self.get_category_choices()
         return form
 
-# class BookView(AuthModelView):
-#     can_view_details = True
-#     column_searchable_list = ['name', 'publisherName']
-#     form_columns = ['name', 'price', 'publisherName', 'image', 'description', 'category_id']
 
-#     def on_form_prefill(self, form, id):
-#         book = Book.query.get(id)
-#         if book:
-#             form.category_id.data = book.category.name
 
 class SaleInvoiceView(AuthModelView):
     can_view_details = True
@@ -225,10 +192,6 @@ admin.add_view(UserView(User, db.session, name='Users'))
 admin.add_view(BookView(Book, db.session, name='Books'))
 admin.add_view(CategoryView(Category, db.session, name='Categories'))
 admin.add_view(StockView(Stock, db.session, name='Stocks'))
-# admin.add_view(AuthModelView(Cart, db.session, name='Carts'))
-# admin.add_view(AuthModelView(CartDetail, db.session, name='Cart Details'))
-# admin.add_view(SaleInvoiceView(SaleInvoice, db.session, name='Sale Invoices'))
-# admin.add_view(DetailInvoiceView(DetailInvoice, db.session, name='Invoice Details'))
 admin.add_view(ReportView(Report, db.session, name='Reports'))
 admin.add_view((StatsView(name='Thống kê báo cáo')))
 admin.add_view((LogoutView(name='Đăng xuất')))

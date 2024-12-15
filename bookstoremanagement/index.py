@@ -1,11 +1,9 @@
-import hashlib
 import math
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
 
 from bookstoremanagement import app, dao, db , login
-from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice, Favorite
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 from bookstoremanagement.tasks import init_scheduler
@@ -83,11 +81,14 @@ def user_login_page():
         user = dao.auth_user(username, password)
         if user:
             login_user(user)
+            # Kiểm tra nếu là admin thì chuyển về trang admin
+            if user.user_role == UserRole.ADMIN:
+                return redirect('/admin')
+            # Nếu không phải admin thì chuyển về trang chủ
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
-    return render_template('login.html' , err_msg = err_msg)
-
+    return render_template('login.html', err_msg = err_msg)
 
 @login.user_loader
 def load_user(user_id):
@@ -360,7 +361,7 @@ def admin_login():
         else:
             flash('Invalid username or password or not admin role', 'error')
 
-    return render_template('admin/login.html')
+    return render_template('login.html')
 
 if __name__ == '__main__':
     from bookstoremanagement.admin import *

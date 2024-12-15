@@ -1,9 +1,12 @@
-import hashlib
-
-from sqlalchemy import func
 
 from bookstoremanagement import db, app
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, Favorite
+import hashlib
+from itertools import groupby
+from sqlalchemy import func
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, \
+    Regulation, Favorite
+from sqlalchemy.sql import extract
+from datetime import datetime, timedelta
 
 
 def load_books(cate_id=None, kw=None , page = None):
@@ -111,13 +114,6 @@ def load_favorite(user_id):
     # Trả về thông tin sách từ bảng Book thông qua mối quan hệ
     favorite_books = [favorite.book for favorite in favorites]
     return favorite_books
-import hashlib
-from itertools import groupby
-from sqlalchemy import func
-from bookstoremanagement import db
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, Regulation
-from sqlalchemy.sql import extract
-from datetime import datetime, timedelta
 
 def load_books(cate_id=None, kw=None):
     query = Book.query
@@ -162,24 +158,6 @@ def insert_book_to_cart(user_id , book_id ):
 
     db.session.commit()
 
-# def add_user(name, username, password, avatar, email):
-#     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-#     u = None
-#     if avatar:
-#         u = User(name=name,
-#                 username=username,
-#                 password=password,
-#                 avatar=avatar,
-#                 email=email,
-#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
-#     else:
-#         u = User(name=name,
-#                 username=username,
-#                 password=password,
-#                 email=email,
-#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
-#     db.session.add(u)
-#     db.session.commit()
 
 def add_user(name , username , password , avatar , email ):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
