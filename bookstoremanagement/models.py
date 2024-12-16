@@ -1,5 +1,5 @@
 import hashlib
-from datetime import date
+from datetime import date, datetime
 from flask import json
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
@@ -7,14 +7,12 @@ from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app ,db
 from flask_login import UserMixin
-from datetime import datetime
-
 
 class UserRole(PyEnum):
     ADMIN = 1
     SALE = 2
     USER = 3
-    
+
     @classmethod
     def choices(cls):
         return [(choice.value, choice.name) for choice in cls]
@@ -78,7 +76,6 @@ class Book(db.Model):
     category_id = db.Column(Integer, ForeignKey('category.id'), nullable=False)
     favorites = relationship('Favorite', backref='book', lazy=True)
 
-
     def __str__(self):
         return self.name
 
@@ -122,9 +119,13 @@ class CartDetail(db.Model):
 class SaleInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     paymentStatus = db.Column(db.String(100))
-    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # Khóa ngoại tới khách hàng
-    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)  # Khóa ngoại tới nhân viên bán hàng
-    orderDate = db.Column(db.Date)
+    #nếu mua onl thì lấy tên thông qua customer_id , nếu mua off thì điền thẳng tên
+    customer_name = db.Column(db.String(100) , nullable = False)
+    #lưu id của khách hang , nếu = null thì là mua off , nếu c giá trị là mua onl
+    customer_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    #lưu id của sale , neu null là mua onl ,neeseu có gia trị là mua off
+    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    orderDate = db.Column(db.Date,default=datetime.utcnow())
 
     def __str__(self):
         return self.name
@@ -149,7 +150,7 @@ class Favorite(db.Model):
 class Regulation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
-    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn kho tối thiểu trước khi nhập
+    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn tối thiểu trước khi nhập
     order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
     updated_date = db.Column(db.DateTime, default=datetime.now())
     updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)

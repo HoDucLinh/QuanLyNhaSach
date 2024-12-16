@@ -2,16 +2,16 @@
 {%block title%}
 <title>Our Store</title>
 {%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/shop.svg') }}" type="image/x-icon">
+{%endblock%}
 {%block content%}
-<section id="popular-books" class="bookshelf py-5 my-5">
+<section id="popular-books">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
 
                 <div class="section-header align-center">
-                    <div class="title">
-                        <span>Some quality items</span>
-                    </div>
                     <h2 class="section-title">Our Books</h2>
                 </div>
 
@@ -20,7 +20,6 @@
                     <li data-tab-target="#all-genre" class="tab {% if not active_cate_id %}active{% endif %}">
                         <a href="/ourstore">All</a>
                     </li>
-
                     <!-- Các tab danh mục -->
                     {% for c in categories %}
                     <li data-tab-target="#all-genre"
@@ -29,10 +28,18 @@
                     </li>
                     {% endfor %}
                 </ul>
-
-
                 <div class="tab-content">
                     <div id="all-genre" data-tab-content class="active">
+                        <ul class="pagination justify-content-center" style="margin:20px 0">
+                            {% for i in range(1, pages + 1) %}
+                            <li class="page-item {% if i == request.args.get('page', 1, type=int) %}active{% endif %}">
+                                <a class="page-link"
+                                   href="/ourstore?page={{ i }}{% if active_cate_id %}&category_id={{ active_cate_id }}{% endif %}">{{
+                                    i }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
                         {% if books %}
                         <div class="row">
                             {% for book in books %}
@@ -46,7 +53,9 @@
                                         <figcaption>
                                             <h3>{{ book.name }}</h3>
                                             <span>{{ book.publisherName }}</span>
-                                            <div class="item-price">${{ book.price }}</div>
+                                            <div class="item-price">${{ book.price }}
+                                            <i class="far fa-heart" id="heart-{{ book.id }}" data-book-id="{{ book.id }}" data-user-id="{{ current_user.id }}"></i>
+                                            </div>
                                         </figcaption>
                                         <input type="hidden" name="book_id" value="{{ book.id }}">
                                     </form>
@@ -65,4 +74,56 @@
         </div>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const hearts = document.querySelectorAll('.fa-heart');
+
+    hearts.forEach(heart => {
+        heart.addEventListener('click', function() {
+            const bookId = this.getAttribute('data-book-id');
+            const userId = this.getAttribute('data-user-id');
+
+            // Kiểm tra trạng thái của trái tim
+            const isLiked = this.classList.contains('fas');
+
+            // Gửi yêu cầu AJAX để thêm hoặc xóa sản phẩm khỏi bảng yêu thích
+            const action = isLiked ? 'remove' : 'add';
+
+            fetch('/toggle_favorite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    book_id: bookId,
+                    user_id: userId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật trạng thái trái tim
+                    if (isLiked) {
+                        this.classList.remove('fas');
+                        this.classList.add('far');
+                        this.style.color = ''; // Trở về màu mặc định
+                    } else {
+                        this.classList.remove('far');
+                        this.classList.add('fas');
+                        this.style.color = 'red'; // Chuyển sang màu đỏ
+                    }
+                } else {
+                    alert(data.message); // Hiển thị thông báo nếu có lỗi
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error processing your request.');
+            });
+        });
+    });
+});
+
+</script>
 {%endblock%}
