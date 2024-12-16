@@ -48,20 +48,6 @@ class UserView(AuthModelView):
         # Lấy role từ form
         model.user_role = UserRole(form.user_role.data)
 
-# class UserView(AuthModelView):
-#     can_view_details = True
-#     column_exclude_list = ['password'] # ẩn pass trên lsv
-#     form_excluded_columns = ['password'] # ẩn pass khi tạo or chỉnh sửa
-#     column_searchable_list = ['username', 'name', 'email']
-#
-#     # ghi đè để tùy chỉnh biểu mẫu
-#     def scaffold_form(self):
-#         form_class = super(UserView, self).scaffold_form()
-#         form_class.user_role = SelectField('User Role',
-#                                          choices=UserRole.choices(),
-#                                          coerce=int)
-#         return form_class
-
 class CategoryView(AuthModelView):
     can_view_details = True
     column_searchable_list = ['name']
@@ -128,16 +114,6 @@ class BookView(AuthModelView):
         form = super(BookView, self).edit_form(obj)
         form.category_id.choices = self.get_category_choices()
         return form
-
-# class BookView(AuthModelView):
-#     can_view_details = True
-#     column_searchable_list = ['name', 'publisherName']
-#     form_columns = ['name', 'price', 'publisherName', 'image', 'description', 'category_id']
-
-#     def on_form_prefill(self, form, id):
-#         book = Book.query.get(id)
-#         if book:
-#             form.category_id.data = book.category.name
 
 class SaleInvoiceView(AuthModelView):
     can_view_details = True

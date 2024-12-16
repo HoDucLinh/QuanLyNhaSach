@@ -149,7 +149,7 @@ class Favorite(db.Model):
 class Regulation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
-    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn tối thiểu trước khi nhập
+    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn kho tối thiểu trước khi nhập
     order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
     updated_date = db.Column(db.DateTime, default=datetime.now())
     updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)
@@ -161,6 +161,7 @@ if __name__ == "__main__":
         stock = Stock(name = "Kho sach chinh")
         db.session.add(stock)
         db.session.commit()
+
         c1 = Category(name="Lap trinh", stock_id=1)
         c2 = Category(name="Ngon tinh", stock_id=1)
         c3 = Category(name="Thieu nhi", stock_id=1)
@@ -172,28 +173,30 @@ if __name__ == "__main__":
                 book = Book(**b)
                 db.session.add(book)
         db.session.commit()
+
         new_user1 = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("hdl".encode('utf-8')).hexdigest()),email='hdl@gmail.com')
         new_user2 = User(name='Nguyen Quang Khanh',username='NQK',password= str(hashlib.md5("nqk".encode('utf-8')).hexdigest()),email='nqk@gmail.com')
         admin_user = User(name='Admin',username='admin',password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),user_role=UserRole.ADMIN)
         # Thêm đối tượng vào cơ sở dữ liệu
         db.session.add_all([new_user1,new_user2,admin_user])
         db.session.commit()
+
         sale_invoices = [
             SaleInvoice(id=1, paymentStatus="Paid", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
             SaleInvoice(id=2, paymentStatus="Pending", customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
             SaleInvoice(id=3, paymentStatus="Paid", customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
         ]
-
         db.session.add_all(sale_invoices)
         db.session.commit()
+
         detail_invoices = [
             DetailInvoice(id=1, book_id=1, saleInvoice_id=1, quantity=2),  # 2 quyển Python Basics
             DetailInvoice(id=2, book_id=2, saleInvoice_id=1, quantity=1),  # 1 quyển Flask Web Development
             DetailInvoice(id=3, book_id=3, saleInvoice_id=2, quantity=3),  # 3 quyển Database Design
         ]
-
         db.session.add_all(detail_invoices)
         db.session.commit()
+
         favorites = [
             Favorite(book_id=1, customer_id=1),
             Favorite(book_id=8, customer_id=1),

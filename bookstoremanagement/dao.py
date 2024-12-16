@@ -106,7 +106,7 @@ def load_invoice(user_id):
     )
     return invoices
 
-# dem so luong sp trong tung cate ghi de len trang chu
+# dem so luong sp trong tung cate ghi de len TRANG CHU
 def category_stats():
     return db.session.query(Category.id, Category.name, func.count(Book.id))\
                      .join(Book, Category.id.__eq__(Book.category_id), isouter=True)\
@@ -121,6 +121,7 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
          .join(Book, Category.id.__eq__(Book.category_id))\
          .join(DetailInvoice, DetailInvoice.book_id.__eq__(Book.id), isouter=True)\
          .join(SaleInvoice, SaleInvoice.id.__eq__(DetailInvoice.saleInvoice_id), isouter=True)\
+         .filter(SaleInvoice.paymentStatus == 'Paid')\
          .group_by(Category.id, Category.name))
 
     if kw:
@@ -134,14 +135,16 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
 
     return p.all()
 
-# thong ke doanh thu theo cate loc theo nam
+# thong ke doanh thu theo cate loc theo nam (toàn bộ)
 def category_revenue_month(year):
     return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
                      .join(DetailInvoice, DetailInvoice.saleInvoice_id.__eq__(SaleInvoice.id))\
                      .join(Book, DetailInvoice.book_id == Book.id)\
                      .filter(extract('year', SaleInvoice.orderDate) == year)\
+                     .filter(SaleInvoice.paymentStatus == 'Paid')\
                      .group_by(extract('month', SaleInvoice.orderDate)).all()
 
+# thong ke doanh thu theo cate loc theo tháng + nam
 def book_quantity_month(year, month=None):
     query = db.session.query(
         extract('month', SaleInvoice.orderDate),
