@@ -158,15 +158,21 @@ class Regulation(db.Model):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
+
         stock = Stock(name = "Kho sach chinh")
         db.session.add(stock)
         db.session.commit()
 
-        c1 = Category(name="Lap trinh", stock_id=1)
-        c2 = Category(name="Ngon tinh", stock_id=1)
-        c3 = Category(name="Thieu nhi", stock_id=1)
-        db.session.add_all([c1, c2, c3])
+        categories = [
+            "Lập trình", "Ngôn tình", "Kiếm hiệp", "Thiếu nhi", "Viễn tưởng",
+            "Khoa học", "Thời đại", "Trinh thám", "Cổ tích", "Giáo dục",
+            "Hoạt hình", "Công việc", "Kỹ năng sống", "Giao tiếp", "Ca nhạc kịch"
+        ]
+        # Tạo các đối tượng Category và thêm vào session
+        category_objects = [Category(name=name, stock_id=1) for name in categories]
+        db.session.add_all(category_objects)
         db.session.commit()
+
         with open('data/books.json', encoding='utf-8') as f:
             books = json.load(f)
             for b in books:
