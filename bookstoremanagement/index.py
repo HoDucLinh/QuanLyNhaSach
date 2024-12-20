@@ -1,11 +1,16 @@
+import json
 import math
+from calendar import error
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
+from pyexpat.errors import messages
 from sqlalchemy import func
 
 from bookstoremanagement import app, dao, db , login
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
+
+from bookstoremanagement.dao import check_import_conditions, check_min_import_quantity
 from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
@@ -203,6 +208,42 @@ def create_invoice():
 def invoice_list():
     invoices = dao.load_invoice(current_user.id)
     return render_template('invoice_list.html', invoices=invoices)
+
+@app.route('/import-book', methods = ['GET', 'POST'])
+def import_books():
+    if request.method == 'POST':
+        book_id = request.form.get('book_id')
+        quantity_to_import = int(request.form.get('quantity'))
+
+        # Kiểm tra điều kiện nhập hàng
+        is_valid, message = check_import_conditions(book_id)
+
+        if not is_valid:
+            flash(message, 'danger')  # Hiển thị thông báo lỗi nếu điều kiện không thỏa mãn
+            return redirect(url_for('import_books'))
+
+        is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity_to_import)
+        if not is_valid_min_quantity:
+            flash(message_min_quantity, 'danger')
+            return redirect(url_for('import_books'))
+
+        # Nếu điều kiện nhập hàng hợp lệ, tiến hành cập nhật số lượng sách
+        book = dao.load_books(book_id)  # Tải sách từ cơ sở dữ liệu
+        if not book:
+            flash("Sách không tồn tại", 'danger')
+            return redirect(url_for('import_books'))
+
+        # Cập nhật số lượng sách
+        book.quantity += quantity_to_import
+        db.session.commit()
+
+        flash(f"Đã nhập {quantity_to_import} cuốn {book.name} vào kho", 'success')
+        return redirect(url_for('import_books'))
+
+    books = dao.load_books()  # Lấy danh sách sách hiện có
+    return render_template('import_book.html', books=books)
+
+
 
 @app.route('/invoice/view/<int:invoice_id>')
 @login_required

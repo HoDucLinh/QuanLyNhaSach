@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Books</title>
+  <!-- Bootstrap CSS -->
+ <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+        body {
+            background-color: #f8f9fa;
+            overflow-x: hidden; /* Ngăn chặn cuộn ngang */
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            position: sticky;
+            top: 0;
+            width: 250px;
+            background-color: #343a40;
+            color: #fff;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar a {
+            color: #d9d2e9;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center; /* Căn chỉnh icon và text ngang hàng */
+        }
+
+        .sidebar a i {
+            margin-right: 10px; /* Tạo khoảng cách giữa icon và tiêu đề */
+        }
+
+        .sidebar a:hover {
+            background-color: #575757; /* Hiệu ứng hover khi rê chuột */
+            color: #fff;
+        }
+
+        .sidebar .active {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        /* Nội dung chính */
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn-primary, .btn-success {
+            border-radius: 50px;
+        }
+
+        .table thead {
+            background-color: #f1f1f1;
+        }
+
+        .table th {
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body>
+ <!-- Sidebar -->
+  <div class="d-flex">
+    <div class="sidebar">
+      <h4 class="text-center py-3">Bookstore Panel</h4>
+      <a href="{{ url_for('sale_employee_page')}}" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
+      <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
+      <a href="{{ url_for('import_books')}}"><i class="fas fa-users me-2"></i>Import Books</a>
+      <a href=""><i class="fas fa-users me-2"></i>Customers</a>
+      <a href="#"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
+      <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
+      <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
+    </div>
+
+  <div class="container mt-4">
+    <h2>Nhập Sách Vào Kho</h2>
+
+    <!-- Hiển thị thông báo thành công hoặc lỗi -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-info">
+          {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Form nhập sách vào kho -->
+    <form method="POST">
+      <div class="form-group">
+        <label for="book_id">Chọn Sách:</label>
+        <select name="book_id" id="book_id" class="form-control" required>
+          <option value="">-- Chọn sách --</option>
+          {% for book in books %}
+            <option value="{{ book.id }}">{{ book.name }} - Số lượng tồn: {{ book.quantity }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quantity">Số lượng nhập:</label>
+        <input type="number" name="quantity" id="quantity" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Nhập Kho</button>
+    </form>
+  </div>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
