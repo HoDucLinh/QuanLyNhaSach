@@ -161,7 +161,7 @@ class Regulation(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
-        # db.create_all()
+        db.create_all()
         # stock = Stock(name = "Kho sach chinh")
         # db.session.add(stock)
         # db.session.commit()
@@ -207,9 +207,9 @@ if __name__ == "__main__":
         # db.session.commit()
         # admin_user = User(name='Admin', username='admin', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
         #                   user_role=UserRole.ADMIN)
-        new_user3 = User(name='Sale1', username='sale12',
-                         password=str(hashlib.md5("123".encode('utf-8')).hexdigest()), email='sale@gmail.com',
-                         user_role=UserRole.SALE)
-        db.session.add(new_user3)
-        db.session.commit()
+        # new_user3 = User(name='Sale1', username='sale12',
+        #                  password=str(hashlib.md5("123".encode('utf-8')).hexdigest()), email='sale@gmail.com',
+        #                  user_role=UserRole.SALE)
+        # db.session.add(new_user3,admin_user)
+        # db.session.commit()
 

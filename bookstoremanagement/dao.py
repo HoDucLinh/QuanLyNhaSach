@@ -106,6 +106,15 @@ def load_invoice(user_id):
     return invoices
 
 
+def load_invoice_details(saleInvoice_id):
+    details = db.session.query(DetailInvoice).filter_by(saleInvoice_id=saleInvoice_id).all()
+
+    # Lấy thông tin sách cho từng chi tiết hóa đơn
+    for detail in details:
+        detail.book = db.session.query(Book).filter_by(id=detail.book_id).first()  # Lấy sách theo book_id
+    return details
+
+
 def load_favorite(user_id):
     # Truy vấn các sản phẩm yêu thích của người dùng
     favorites = Favorite.query.filter(Favorite.customer_id == user_id).all()

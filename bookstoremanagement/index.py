@@ -213,8 +213,8 @@ def view_invoice(invoice_id):
 @app.route('/payment' , methods=['POST'])
 def payment_page():
     totalAmount = 0
-    cart_id = Cart.query.filter_by(user_id=current_user.id).first()
-    cart_details = CartDetail.query.filter_by(cart_id=cart_id.id).all()  # Ensure you're querying by cart_id
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()  # Ensure you're querying by cart_id
     books = []  # Will hold full book objects
 
     for b in cart_details:
@@ -228,14 +228,82 @@ def payment_page():
 
     return render_template('payment.html', books=books, totalAmount=totalAmount)
 
+@app.route('/checkout' , methods=['POST'])
+@login_required
+def check_out():
+    if request.method == 'POST':
+        shipping_method = request.form.get('shippingMethod')
+        selection = request.form.get('selection')
+        if shipping_method == 'homeDelivery' or (shipping_method == 'storePickup' and selection == 'payOnline'):
+            invoice = SaleInvoice(
+                paymentStatus='Paid',
+                customer_name=current_user.name,
+                customer_id=current_user.id,
+                sale_id=None,
+                orderDate=datetime.utcnow()
+            )
+            db.session.add(invoice)
+            db.session.commit()
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+            for c in cart_details:
+                detail_invoice = DetailInvoice(
+                    book_id=c.book_id,
+                    saleInvoice_id=invoice.id,
+                    quantity=c.quantity
+                )
+                db.session.add(detail_invoice)
+            db.session.commit()
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
+            for c in cart_detail:
+                db.session.delete(c)
+            db.session.commit()
+            return redirect('/account')
+        elif shipping_method == 'storePickup' and selection == 'payAtStore':
+            invoice = SaleInvoice(
+                paymentStatus='Pending',
+                customer_name=current_user.name,
+                customer_id=current_user.id,
+                sale_id=None,
+                orderDate=datetime.utcnow()
+            )
+            db.session.add(invoice)
+            db.session.commit()
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+            for c in cart_details:
+                detail_invoice = DetailInvoice(
+                    book_id=c.book_id,
+                    saleInvoice_id=invoice.id,
+                    quantity=c.quantity
+                )
+                db.session.add(detail_invoice)
+            db.session.commit()
+            cart = Cart.query.filter_by(user_id=current_user.id).first()
+            cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
+            for c in cart_detail:
+                db.session.delete(c)
+            db.session.commit()
+            return redirect('/account')
+    return render_template('payment.html')
 
 
 @app.route('/account')
 @login_required
 def account_page():
     invoices = dao.load_invoice(current_user.id)  # Lấy hóa đơn cho user hiện tại
-    favorites = dao.load_favorite(current_user.id) #lấy danh sách sách yêu thích của người dùng
-    return render_template('accountcustomer.html', invoices=invoices , favorites= favorites)
+    favorites = dao.load_favorite(current_user.id)  # Lấy danh sách sách yêu thích của người dùng
+    invoice_details = {}  # Sử dụng dictionary để chứa chi tiết hóa đơn
+
+    # Lấy chi tiết hóa đơn cho mỗi hóa đơn
+    for invoice in invoices:
+        details = dao.load_invoice_details(invoice.id)  # Truy vấn chi tiết hóa đơn
+        invoice_details[invoice.id] = details  # Lưu chi tiết hóa đơn vào dictionary theo ID của hóa đơn
+
+    return render_template('accountcustomer.html', invoices=invoices, favorites=favorites, invoice_details=invoice_details)
+
+
 
 
 @app.route('/cart')
@@ -279,9 +347,10 @@ def add_to_cart():
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
         dao.insert_book_to_cart(user_id , book_id)
-        return jsonify({'message': 'Added to cart successfully'}), 200
+        flash('Them vao gio hang thanh cong!!!')
+        return redirect('/ourstore')
 
-    return jsonify({'error': 'Bạn phải đăng nhập'}), 401
+    return redirect('/ourstore')
 
 
 @app.route('/remove_from_cart', methods=['POST'])
@@ -316,16 +385,9 @@ def delete_from_favorite():
 
     # Truy vấn favorite của người dùng và tìm sản phẩm yêu thích theo book_id
     favorite_detail = Favorite.query.filter_by(customer_id=user_id, book_id=book_id).first()
-
-    if not favorite_detail:
-        flash('Product not found in your favorites.', 'danger')
-        return redirect('/account')  # Nếu không có sản phẩm yêu thích, quay lại trang tài khoản
-
     # Xóa sản phẩm khỏi danh sách yêu thích
     db.session.delete(favorite_detail)
     db.session.commit()
-
-    flash('Product removed from your favorites.', 'success')
     return redirect('/account')  # Quay lại trang tài khoản sau khi xóa
 
 

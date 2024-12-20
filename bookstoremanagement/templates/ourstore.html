@@ -8,6 +8,15 @@
 {%block content%}
 <section id="popular-books">
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alert alert-info">
+            {% for category, message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         <div class="row">
             <div class="col-md-12">
 
@@ -34,7 +43,8 @@
                             {% for i in range(1, pages + 1) %}
                             <li class="page-item {% if i == request.args.get('page', 1, type=int) %}active{% endif %}">
                                 <a class="page-link"
-                                   href="/ourstore?page={{ i }}{% if active_cate_id %}&category_id={{ active_cate_id }}{% endif %}">{{ i }}</a>
+                                   href="/ourstore?page={{ i }}{% if active_cate_id %}&category_id={{ active_cate_id }}{% endif %}">{{
+                                    i }}</a>
                             </li>
                             {% endfor %}
                         </ul>
@@ -53,7 +63,9 @@
                                             <h3>{{ book.name }}</h3>
                                             <span>{{ book.publisherName }}</span>
                                             <div class="item-price">${{ book.price }}
-                                            <i class="far fa-heart" id="heart-{{ book.id }}" data-book-id="{{ book.id }}" data-user-id="{{ current_user.id }}"></i>
+                                                <i class="far fa-heart" id="heart-{{ book.id }}"
+                                                   data-book-id="{{ book.id }}"
+                                                   data-user-id="{{ current_user.id }}"></i>
                                             </div>
                                         </figcaption>
                                         <input type="hidden" name="book_id" value="{{ book.id }}">
