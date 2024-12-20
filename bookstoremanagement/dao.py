@@ -164,13 +164,23 @@ def book_quantity_month(year, month=None):
 def get_current_regulations():
     return Regulation.query.order_by(Regulation.updated_date.desc()).first()
 
-# kiểm tra điều kiện nhập hàng
+# kiểm tra điều kiện nhập hàng (số lượng tồn kho)
 def check_import_conditions(book_id):
     regulations = get_current_regulations()
     book = Book.query.get(book_id)
     
     if book.quantity >= regulations.min_stock_before_import:
         return False, f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
+        
+    return True, None
+
+# Kiểm tra số lượng nhập tối thiểu mỗi lần nhập
+def check_min_import_quantity(quantity):
+    # Lấy quy định hiện tại
+    regulations = get_current_regulations()
+    
+    if quantity < regulations.min_import_quantity:
+        return False, f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
         
     return True, None
 
