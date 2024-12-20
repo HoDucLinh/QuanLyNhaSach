@@ -1,12 +1,17 @@
-import hmac
+import json
 import math
-import urllib
+from calendar import error
+
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
+from pyexpat.errors import messages
 from sqlalchemy import func
+
 from bookstoremanagement import app, dao, db , login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
+
+from bookstoremanagement.dao import check_import_conditions, check_min_import_quantity
 from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
@@ -158,7 +163,7 @@ def view_books():
 
     return render_template('view_books.html', books=books, categories=categories, selected_category_name=selected_category_name)
 
-
+# Tạo hóa đơn
 @app.route('/create-invoice', methods=['GET', 'POST'])
 def create_invoice():
     books = dao.load_books()
@@ -189,21 +194,100 @@ def create_invoice():
                 item = DetailInvoice(
                     saleInvoice_id=invoice.id,
                     book_id=int(book_id),
-                    quantity=int(quantity),
-                    price=float(price)
+                    quantity=int(quantity)
                 )
                 db.session.add(item)
 
         db.session.commit()
         flash('Tạo hóa đơn thành công', 'success')
-        return redirect(url_for('invoice_list'))  # Hoặc bất kỳ route nào bạn muốn chuyển hướng đến
+        return redirect(url_for('invoice_list'))
     return render_template('create_invoice.html', books=books)
 
+# Danh sách các hóa đơn
 @app.route('/create-invoice/list')
 @login_required
 def invoice_list():
     invoices = dao.load_invoice(current_user.id)
     return render_template('invoice_list.html', invoices=invoices)
+
+# Nhập sách vào kho
+@app.route('/import-book', methods = ['GET', 'POST'])
+def import_books():
+    if request.method == 'POST':
+        book_id = request.form.get('book_id')
+        quantity_to_import = int(request.form.get('quantity'))
+
+        # Kiểm tra điều kiện nhập hàng
+        is_valid, message = check_import_conditions(book_id)
+
+        if not is_valid:
+            flash(message, 'danger')
+            return redirect(url_for('import_books'))
+
+        is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity_to_import)
+        if not is_valid_min_quantity:
+            flash(message_min_quantity, 'danger')
+            return redirect(url_for('import_books'))
+
+        # Nếu điều kiện nhập hàng hợp lệ
+        book = dao.load_books(book_id)  # Tải sách từ cơ sở dữ liệu
+        if not book:
+            flash("Sách không tồn tại", 'danger')
+            return redirect(url_for('import_books'))
+
+        # Cập nhật số lượng sách
+        book.quantity += quantity_to_import
+        db.session.commit()
+
+        flash(f"Đã nhập {quantity_to_import} cuốn {book.name} vào kho", 'success')
+        return redirect(url_for('import_books'))
+
+    books = dao.load_books()
+    return render_template('import_book.html', books=books)
+
+# Các đơn hàng Online và nhận tại Store
+@app.route('/orders')
+def show_orders():
+    orders = SaleInvoice.query.all()
+    overdue_orders = dao.check_order_cancellation()
+
+    for order in orders:
+        if order in overdue_orders:
+            order.paymentStatus = 'Cancelled'
+
+    db.session.commit()
+    return render_template('orders.html', orders=orders)
+
+
+@app.route('/order_detail/orderNO_<int:saleInvoice_id>', methods=['GET', 'POST'])
+def order_detail(saleInvoice_id):
+    sale_invoice = SaleInvoice.query.get_or_404(saleInvoice_id)
+    details = DetailInvoice.query.filter_by(saleInvoice_id=saleInvoice_id).all()
+
+    if request.method == 'POST':
+        if sale_invoice.paymentStatus == 'Pending':
+            sale_invoice.paymentStatus = 'Paid'
+            db.session.commit()
+            flash('Thanh toán đã được xác nhận!', 'success')  # Thông báo thành công
+            return redirect(url_for('show_orders'))  # Chuyển hướng về danh sách đơn hàng sau khi cập nhật
+
+    return render_template('order_detail.html', sale_invoice=sale_invoice, details=details)
+
+@app.route('/customers', methods = ['GET'])
+def customers():
+    orders = SaleInvoice.query.filter(SaleInvoice.customer_id==None).all()
+    return render_template('customers.html', orders=orders)
+
+@app.route('/customers_detail/<int:saleInvoice_id>', methods = ['GET'])
+def customer_detail(saleInvoice_id):
+    sale_invoice = SaleInvoice.query.get(saleInvoice_id)
+    details = db.session.query(
+        Book.name,
+        DetailInvoice.quantity,
+        (DetailInvoice.quantity * Book.price).label('total_price')
+    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
+    .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
+    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details)
 
 @app.route('/invoice/view/<int:invoice_id>')
 @login_required
@@ -336,6 +420,7 @@ def cart_page():
         return redirect('/login')
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
+
 
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():

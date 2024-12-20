@@ -50,7 +50,7 @@
                             <td>
                                 {% set total = namespace(value=0) %}
                                 {% for item in invoice.items %}
-                                    {% set total.value = total.value + (item.quantity * item.price) %}
+                                    {% set total.value = total.value + (item.quantity * book.price) %}
                                 {% endfor %}
                                 {{ "{:,.0f}".format(total.value) }} VNĐ
                             </td>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết đơn hàng</title>
+</head>
+<body>
+   {% block content %}
+    <h1>Chi Tiết Đơn Hàng #{{ sale_invoice.saleInvoice_id }}</h1>
+    <p><strong>Customer Name:</strong> {{ sale_invoice.customer_name }}</p>
+    <p><strong>Order Date:</strong> {{ sale_invoice.orderDate }}</p>
+    <p><strong>Payment Status:</strong> {{ sale_invoice.paymentStatus }}</p>
+
+    <!-- Hiển thị chi tiết hóa đơn -->
+    <h3>Detail Invoice:</h3>
+    <ul>
+        {% for detail in details %}
+            <li>{{ detail.book_name }} - {{ detail.quantity }} - {{ detail.price }}</li>
+        {% endfor %}
+    </ul>
+
+    {% if sale_invoice.paymentStatus == 'Pending' %}
+        <form method="POST">
+            <button type="submit" class="btn btn-primary">Confirm Payment</button>
+        </form>
+    {% else %}
+        <p>This order has already been processed or cancelled.</p>
+    {% endif %}
+{% endblock %}
+</body>
+</html>

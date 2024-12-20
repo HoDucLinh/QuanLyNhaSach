@@ -1,3 +1,5 @@
+
+from bookstoremanagement import db, app
 import hashlib
 from sqlalchemy import func
 from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, \
@@ -7,8 +9,11 @@ from datetime import datetime, timedelta
 from bookstoremanagement import app,db
 
 
-def load_books(cate_id=None, kw=None , page = None):
+def load_books(book_id=None,cate_id=None, kw=None , page = None):
     query = Book.query
+
+    if book_id:  # Kiểm tra nếu book_id có giá trị
+        return query.filter(Book.id == book_id).first()
 
     if cate_id:
         query = query.filter(Book.category_id == cate_id)
@@ -38,6 +43,7 @@ def count_books(cate_id=None):
 def load_product_by_id(id):
     book = Book.query.filter_by(id=id).first()
     return book
+
 
 def insert_book_to_cart(user_id , book_id ):
     # Kiểm tra xem người dùng đã có giỏ hàng chưa
@@ -77,10 +83,10 @@ def add_user(name , username , password , avatar , email ):
 
 
 def auth_user(username, password):
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    
-    return User.query.filter(User.username.__eq__(username.strip()),
-                           User.password.__eq__(password)).first()
+
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
+
+    return User.query.filter(User.username.__eq__(username),User.password.__eq__(password)).first()
 
 
 def load_user_by_id(user_id):
@@ -170,10 +176,10 @@ def book_quantity_month(year, month=None):
      .join(Book, Book.id == DetailInvoice.book_id)\
      .filter(extract('year', SaleInvoice.orderDate) == year)\
      .filter(SaleInvoice.paymentStatus == 'Paid')
-    
+
     if month:
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
-        
+
     return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
 
 # ========================= KIỂM TRA QUY ĐỊNH
@@ -184,21 +190,33 @@ def get_current_regulations():
 def check_import_conditions(book_id):
     regulations = get_current_regulations()
     book = Book.query.get(book_id)
-    
+
     if book.quantity >= regulations.min_stock_before_import:
         return False, f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
-        
+
+    return True, None
+
+def check_min_import_quantity(quantity):
+    regulations = get_current_regulations()
+
+    if quantity < regulations.min_import_quantity:
+        return False, f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
+
     return True, None
 
 # kiểm tra hủy đơn tự động
 def check_order_cancellation():
     regulations = get_current_regulations()
     cancel_time = regulations.order_cancel_time
-    
+
     # Tìm các đơn hàng quá hạn
     overdue_orders = SaleInvoice.query.filter(
         SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
         SaleInvoice.paymentStatus == 'Pending'
     ).all()
-    
+
     return overdue_orders
+
+def get_cart_details(sale_invoice_id):
+    # Truy vấn chi tiết giỏ hàng của một đơn hàng
+    return db.session.query(CartDetail, Book).join(Book).filter(CartDetail.saleInvoice_id == sale_invoice_id).all()
