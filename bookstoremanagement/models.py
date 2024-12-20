@@ -211,3 +211,14 @@ if __name__ == "__main__":
         ]
         db.session.add_all(favorites)
         db.session.commit()
+
+        sample_regulation = Regulation(
+            min_import_quantity=150,
+            min_stock_before_import=300,
+            order_cancel_time=48,
+            updated_date=datetime.now(),
+            updated_by=3
+        )
+
+        db.session.add(sample_regulation)
+        db.session.commit()
