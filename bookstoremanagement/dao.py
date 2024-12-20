@@ -4,6 +4,7 @@ from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, S
     Regulation, Favorite
 from sqlalchemy.sql import extract
 from datetime import datetime, timedelta
+from bookstoremanagement import app,db
 
 
 def load_books(cate_id=None, kw=None , page = None):
