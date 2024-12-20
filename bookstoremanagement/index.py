@@ -1,9 +1,11 @@
+import hmac
 import math
+import urllib
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
 
-from bookstoremanagement import app, dao, db , login
+from bookstoremanagement import app, dao, db, login
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 from bookstoremanagement.tasks import init_scheduler
@@ -510,6 +512,34 @@ def admin_login():
             flash('Invalid username or password or not admin role', 'error')
 
     return render_template('login.html')
+
+@app.route('/callback', methods=['POST'])
+def callback():
+  result = {}
+
+  try:
+    cbdata = request.json
+    mac = hmac.new(app.ZALO_PAY_KEY2.encode(), cbdata['data'].encode(), hashlib.sha256).hexdigest()
+
+    # kiểm tra callback hợp lệ (đến từ ZaloPay server)
+    if mac != cbdata['mac']:
+      # callback không hợp lệ
+      result['returncode'] = -1
+      result['returnmessage'] = 'mac not equal'
+    else:
+      # thanh toán thành công
+      # merchant cập nhật trạng thái cho đơn hàng
+      dataJson = json.loads(cbdata['data'])
+      print("update order's status = success where apptransid = " + dataJson['apptransid'])
+
+      result['returncode'] = 1
+      result['returnmessage'] = 'success'
+  except Exception as e:
+    result['returncode'] = 0 # ZaloPay server sẽ callback lại (tối đa 3 lần)
+    result['returnmessage'] = str(e)
+
+  # thông báo kết quả cho ZaloPay server
+  return json.jsonify(result)
 
 if __name__ == '__main__':
     from bookstoremanagement.admin import *
