@@ -66,8 +66,8 @@
                             <td>{{ item.book.name }}</td>
                             <td>{{ "{:,.0f}".format(item.price) }} VNĐ</td>
                             <td>{{ item.quantity }}</td>
-                            <td>{{ "{:,.0f}".format(item.quantity * item.price) }} VNĐ</td>
-                            {% set total.value = total.value + (item.quantity * item.price) %}
+                            <td>{{ "{:,.0f}".format(item.quantity * book.price) }} VNĐ</td>
+                            {% set total.value = total.value + (item.quantity * book.price) %}
                         </tr>
                         {% endfor %}
                         <tr>

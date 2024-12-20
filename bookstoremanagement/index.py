@@ -193,8 +193,7 @@ def create_invoice():
                 item = DetailInvoice(
                     saleInvoice_id=invoice.id,
                     book_id=int(book_id),
-                    quantity=int(quantity),
-                    price=float(price)
+                    quantity=int(quantity)
                 )
                 db.session.add(item)
 
@@ -259,7 +258,7 @@ def show_orders():
     return render_template('orders.html', orders=orders)
 
 
-@app.route('/order_detail/<int:saleInvoice_id>', methods=['GET', 'POST'])
+@app.route('/order_detail/orderNO_<int:saleInvoice_id>', methods=['GET', 'POST'])
 def order_detail(saleInvoice_id):
     sale_invoice = SaleInvoice.query.get_or_404(saleInvoice_id)
     details = DetailInvoice.query.filter_by(saleInvoice_id=saleInvoice_id).all()
@@ -273,8 +272,21 @@ def order_detail(saleInvoice_id):
 
     return render_template('order_detail.html', sale_invoice=sale_invoice, details=details)
 
+@app.route('/customers', methods = ['GET'])
+def customers():
+    orders = SaleInvoice.query.filter(SaleInvoice.customer_id==None).all()
+    return render_template('customers.html', orders=orders)
 
-
+@app.route('/customers_detail/<int:saleInvoice_id>', methods = ['GET'])
+def customer_detail(saleInvoice_id):
+    sale_invoice = SaleInvoice.query.get(saleInvoice_id)
+    details = db.session.query(
+        Book.name,
+        DetailInvoice.quantity,
+        (DetailInvoice.quantity * Book.price).label('total_price')
+    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
+    .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
+    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details)
 
 @app.route('/invoice/view/<int:invoice_id>')
 @login_required
