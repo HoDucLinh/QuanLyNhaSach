@@ -34,8 +34,7 @@
                             {% for i in range(1, pages + 1) %}
                             <li class="page-item {% if i == request.args.get('page', 1, type=int) %}active{% endif %}">
                                 <a class="page-link"
-                                   href="/ourstore?page={{ i }}{% if active_cate_id %}&category_id={{ active_cate_id }}{% endif %}">{{
-                                    i }}</a>
+                                   href="/ourstore?page={{ i }}{% if active_cate_id %}&category_id={{ active_cate_id }}{% endif %}">{{ i }}</a>
                             </li>
                             {% endfor %}
                         </ul>

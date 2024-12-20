@@ -402,6 +402,7 @@ def edit_profile():
 
 
 @app.route('/toggle_favorite', methods=['POST'])
+@login_required
 def toggle_favorite():
     data = request.get_json()
     book_id = data['book_id']
