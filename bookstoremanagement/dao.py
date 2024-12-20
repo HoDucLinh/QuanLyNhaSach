@@ -203,3 +203,6 @@ def check_order_cancellation():
 
     return overdue_orders
 
+def get_cart_details(sale_invoice_id):
+    # Truy vấn chi tiết giỏ hàng của một đơn hàng
+    return db.session.query(CartDetail, Book).join(Book).filter(CartDetail.saleInvoice_id == sale_invoice_id).all()

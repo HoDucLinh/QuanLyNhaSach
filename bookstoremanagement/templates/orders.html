@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đơn hàng</title>
+</head>
+<body>
+    <h1>Danh sách đơn hàng</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>SaleInvoice ID</th>
+                <th>Customer Name</th>
+                <th>Order Date</th>
+                <th>Payment Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.orderDate }}</td>
+                <td>{{ order.paymentStatus }}</td>
+                <td>
+                 <a href="{{ url_for('order_detail', saleInvoice_id=order.id) }}">View Detail</a>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

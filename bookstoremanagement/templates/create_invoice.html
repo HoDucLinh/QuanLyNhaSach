@@ -65,10 +65,9 @@
 <body>
     <!-- Sidebar (chỉ thêm) -->
     <div class="sidebar">
-        <h4 class="text-center text-white">Bookstore Panel</h4>
-        <a href="{{ url_for('sale_employee_page')}}" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
+        <h4 class="text-center text-white">Bookstore Panel</h4><a href="{{ url_for('sale_employee_page')}}" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
       <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
-      <a href="{{ url_for('import_books')}}"><i class="fas fa-users me-2"></i>Import Books</a>
+      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Import Books</a>
       <a href=""><i class="fas fa-users me-2"></i>Customers</a>
       <a href="#"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
