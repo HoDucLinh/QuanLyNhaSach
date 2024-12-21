@@ -441,10 +441,9 @@ def add_to_cart():
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
         dao.insert_book_to_cart(user_id, book_id)
-        flash('Them vao gio hang thanh cong!!!')
-        return redirect('/ourstore')
+        return {'status': 'success', 'message': 'Thêm vào giỏ hàng thành công!'}
 
-    return redirect('/ourstore')
+    return {'status': 'error', 'message': 'Bạn cần đăng nhập để thêm sách vào giỏ hàng.'}, 401
 
 
 @app.route('/remove_from_cart', methods=['POST'])
@@ -502,7 +501,6 @@ def update_quantity():
     if cart_detail:
         cart_detail.quantity = new_quantity
         db.session.commit()
-        flash('Cập nhật số lượng thành công!', 'success')
     # Redirect về trang giỏ hàng
     return redirect('/cart')
 

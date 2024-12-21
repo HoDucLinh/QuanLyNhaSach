@@ -54,10 +54,10 @@
                             {% for book in books %}
                             <div class="col-md-3">
                                 <div class="product-item">
-                                    <form action="/add_to_cart" method="POST">
+                                    <form method="POST">
                                         <figure class="product-style">
                                             <img src="{{ book.image }}" alt="{{ book.name }}" class="product-item">
-                                            <button type="submit" class="add-to-cart">Add to Cart</button>
+                                            <button type="submit" class="add-to-cart" data-book-id="{{ book.id }}">Add to Cart</button>
                                         </figure>
                                         <figcaption>
                                             <h3>{{ book.name }}</h3>
@@ -135,6 +135,33 @@
         });
     });
 });
+document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // Ngăn chặn tải lại trang
+            const bookId = this.dataset.bookId; // Lấy ID sách từ thuộc tính data
 
+            fetch('/add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    book_id: bookId,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message); // Hiển thị thông báo thành công
+                } else {
+                    alert(data.message); // Hiển thị thông báo lỗi
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+            });
+        });
+    });
 </script>
 {%endblock%}
