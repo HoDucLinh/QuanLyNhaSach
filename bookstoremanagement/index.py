@@ -1,5 +1,4 @@
 import math
-from http.cookiejar import cut_port_re
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
@@ -611,6 +610,32 @@ def admin_login():
 @app.route("/order", methods=["POST"])
 def order():
     if request.method == 'POST':
+        if request.form.get('shippingMethod') == 'storePickup' and request.form.get('selection') == 'payAtStore':
+            user_id = current_user.id
+            # Lấy giỏ hàng của người dùng
+            cart = Cart.query.filter_by(user_id=user_id).first()
+            # Lấy chi tiết giỏ hàng
+            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+            sale_invoice = SaleInvoice(
+                paymentStatus="Pending",
+                customer_name=current_user.name,
+                customer_id=user_id,
+                orderDate=datetime.utcnow()
+            )
+            db.session.add(sale_invoice)
+            db.session.commit()  # Lưu SaleInvoice để có ID
+            # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
+            for detail in cart_details:
+                detail_invoice = DetailInvoice(
+                    book_id=detail.book_id,
+                    saleInvoice_id=sale_invoice.id,
+                    quantity=detail.quantity
+                )
+                db.session.add(detail_invoice)
+            CartDetail.query.filter_by(cart_id=cart.id).delete()
+            db.session.delete(cart)
+            db.session.commit()
+            return redirect("account")
         total = request.form.get('total')
         amount = round(float(total))
 
@@ -626,17 +651,11 @@ def order():
             return pay_url  # Trả về thông báo lỗi nếu có
 
 
-import json
-from flask import request, jsonify, redirect
-from datetime import datetime
-
-
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     status = request.args.get("status")
     if status == "1":
         user_id = current_user.id
-
         # Lấy giỏ hàng của người dùng
         cart = Cart.query.filter_by(user_id=user_id).first()
         # Lấy chi tiết giỏ hàng
@@ -648,7 +667,6 @@ def callback():
             customer_id=user_id,
             orderDate=datetime.utcnow()
         )
-        print(sale_invoice)
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
 
@@ -660,57 +678,12 @@ def callback():
                 quantity=detail.quantity
             )
             db.session.add(detail_invoice)
-
-
         CartDetail.query.filter_by(cart_id=cart.id).delete()
         db.session.delete(cart)
         db.session.commit()
-
-        # Trả về phản hồi thành công
         return redirect("account")
     else:
-        return "Status not 1"
-    # try:
-    #
-    #     # Kiểm tra xem có dữ liệu trong request không
-    #     if not request.data:
-    #         return "No data received", 400
-    #
-    #     # Log dữ liệu thô để kiểm tra
-    #     print(f"Request Data: {request.data.decode('utf-8')}")
-    #
-    #     # Kiểm tra xem Content-Type có phải là JSON không
-    #     if request.content_type == "application/json":
-    #         data = request.json  # Lấy dữ liệu JSON
-    #     else:
-    #         # Nếu không phải JSON, cố gắng giải mã dữ liệu thô
-    #         data = json.loads(request.data.decode("utf-8"))
-    #
-    #     # Kiểm tra dữ liệu có hợp lệ không
-    #     if not data:
-    #         return "Invalid request: No data received", 400
-    #
-    #     # Log dữ liệu đã phân tích
-    #     print(f"Parsed Data: {data}")
-    #
-    #     # Kiểm tra trạng thái thanh toán (giả sử thành công nếu `return_code == 1`)
-    #     if data.get("return_code") != 1:
-    #         return f"Payment failed: {data.get('return_message', 'No message provided')}", 400
-    #
-    #     # Kiểm tra người dùng có được xác thực không
-    #     if not current_user.is_authenticated:
-    #         return "User not authenticated", 401
-    #
-    #
-    #
-    #     except Exception as e:
-    #         db.session.rollback()  # Hoàn tác nếu có lỗi
-    #         return f"Error processing order: {str(e)}", 500
-    #
-    # except Exception as e:
-    #     # Trả về lỗi nếu có vấn đề trong việc xử lý yêu cầu
-    #     return f"Error parsing request: {str(e)}", 400
-    #
+        return "Thanh toan khong thanh cong!!!"
 
 
 if __name__ == '__main__':
