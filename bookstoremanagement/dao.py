@@ -1,3 +1,7 @@
+import hmac
+
+import requests
+import json
 
 from bookstoremanagement import db, app
 import hashlib
@@ -6,7 +10,63 @@ from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, S
     Regulation, Favorite
 from sqlalchemy.sql import extract
 from datetime import datetime, timedelta
+import time
 from bookstoremanagement import app,db
+
+
+class ZaloPayDAO:
+    def __init__(self):
+        self.app_id = '2553'  # ID của ứng dụng ZaloPay
+        self.key1 = 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL'  # Khóa bí mật của ứng dụng
+        self.callback_url = 'http://127.0.0.1:5000/callback'  # URL callback
+        self.bank_code = 'zalopayapp'  # Mã ngân hàng (ZaloPay App)
+
+    def create_order(self, amount ):
+        # Dữ liệu đơn hàng
+        app_user = 'ZaloPayDemo'  # Tên người dùng ứng dụng
+        app_time = str(int(time.time() * 1000))  # Thời gian hiện tại
+        app_trans_id = f'220817_{app_time}'  # ID giao dịch duy nhất
+        embed_data = json.dumps({"redirecturl" : self.callback_url})
+        item = '[]'
+        description = f'ZaloPayDemo - Thanh toán cho đơn hàng #{app_trans_id}'
+
+        # Cấu trúc dữ liệu gửi đến ZaloPay
+        data = f"{self.app_id}|{app_trans_id}|{app_user}|{amount}|{app_time}|{embed_data}|{item}"
+        mac = hmac.new(self.key1.encode(), data.encode(), hashlib.sha256).hexdigest()  # Tính toán mã xác thực
+
+        # Thông tin yêu cầu gửi đến API ZaloPay
+        params = {
+            "app_id": self.app_id,
+            "app_user": app_user,
+            "app_time": app_time,
+            "amount": amount,
+            "app_trans_id": app_trans_id,
+            "bank_code": self.bank_code,
+            "embed_data": embed_data,
+            "item": item,
+            "callback_url": self.callback_url,
+            "description": description,
+            "mac": mac  # Mã xác thực
+        }
+
+        # Gửi yêu cầu đến API ZaloPay
+        try:
+            response = requests.post("https://sb-openapi.zalopay.vn/v2/create", data=params)
+            response.raise_for_status()  # Kiểm tra mã trạng thái HTTP
+
+            result = response.json()
+
+            print("ZaloPay Response:", result)
+
+            # Kiểm tra nếu trả về thành công và có khóa order_url
+            if result.get("return_code") == 1 and "order_url" in result:
+                return result["order_url"]  # Trả về URL thanh toán
+            else:
+                return f"Error: {result.get('return_message', 'No return message')}"
+        except requests.exceptions.RequestException as e:
+            return f"Error in request to ZaloPay API: {str(e)}"
+        except ValueError:
+            return "Error: Invalid JSON response from ZaloPay"
 
 
 def load_books(book_id=None,cate_id=None, kw=None , page = None):

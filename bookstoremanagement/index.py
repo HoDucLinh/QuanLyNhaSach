@@ -1,12 +1,10 @@
-import json
 import math
-from calendar import error
+from http.cookiejar import cut_port_re
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
-from pyexpat.errors import messages
 from sqlalchemy import func
 
-from bookstoremanagement import app, dao, db , login
+from bookstoremanagement import app, dao, db, login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
@@ -16,6 +14,7 @@ from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
 
+
 @app.route('/')
 def home_page():
     flag = 0
@@ -24,7 +23,7 @@ def home_page():
     if q:
         books = dao.load_books(kw=q)
         flag = 1
-    return render_template('index.html' , books = books , flag =flag)
+    return render_template('index.html', books=books, flag=flag)
 
 
 @app.route('/popular')
@@ -34,8 +33,8 @@ def popular_page():
         Favorite.book_id,
         func.count(Favorite.book_id).label('favorite_count')
     ).group_by(Favorite.book_id) \
-     .order_by(func.count(Favorite.book_id).desc()) \
-     .limit(4).all()
+        .order_by(func.count(Favorite.book_id).desc()) \
+        .limit(4).all()
 
     # Now, fetch the book details based on the popular books
     books = []
@@ -77,7 +76,8 @@ def our_store_page():
         pages=pages
     )
 
-@app.route('/login',methods=['get','post'])
+
+@app.route('/login', methods=['get', 'post'])
 def user_login_page():
     err_msg = None
     if request.method == 'POST':
@@ -96,14 +96,15 @@ def user_login_page():
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
-    return render_template('login.html', err_msg = err_msg)
+    return render_template('login.html', err_msg=err_msg)
+
 
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
 
 
-@app.route('/register' , methods = ['GET','POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register_page():
     msg = None
     if request.method.__eq__('POST'):
@@ -118,11 +119,11 @@ def register_page():
             if avatar:
                 res = cloudinary.uploader.upload(avatar)
                 avatar_path = res['secure_url']
-            dao.add_user(name , username, password, avatar_path, email)
-            return  redirect('/login')
+            dao.add_user(name, username, password, avatar_path, email)
+            return redirect('/login')
         else:
             msg = "Xac nhan mat khau chua dung"
-    return render_template("register.html" , err_msg = msg)
+    return render_template("register.html", err_msg=msg)
 
 
 # Sale Employee
@@ -133,11 +134,11 @@ def sale_employee_page():
         return render_template('sale_employee.html')
     return redirect(url_for('user_login_page'))
 
-# Quản lý sách
-@app.route('/view-books', methods = ['GET'])
-def view_books():
 
-    #Load toàn bộ danh mục và sách
+# Quản lý sách
+@app.route('/view-books', methods=['GET'])
+def view_books():
+    # Load toàn bộ danh mục và sách
     books = dao.load_books()
     categories = dao.load_categories()
 
@@ -146,7 +147,7 @@ def view_books():
 
     # Lấy giá trị từ tham số
     category_id = request.args.get('category_id', type=int)
-    search_book = request.args.get('search_book','')
+    search_book = request.args.get('search_book', '')
 
     # Lọc sách theo thể loại
     if category_id:
@@ -161,7 +162,9 @@ def view_books():
     if search_book:
         books = [book for book in books if search_book.lower() in book.name.lower()]
 
-    return render_template('view_books.html', books=books, categories=categories, selected_category_name=selected_category_name)
+    return render_template('view_books.html', books=books, categories=categories,
+                           selected_category_name=selected_category_name)
+
 
 # Tạo hóa đơn
 @app.route('/create-invoice', methods=['GET', 'POST'])
@@ -203,6 +206,7 @@ def create_invoice():
         return redirect(url_for('invoice_list'))
     return render_template('create_invoice.html', books=books)
 
+
 # Danh sách các hóa đơn
 @app.route('/create-invoice/list')
 @login_required
@@ -210,8 +214,9 @@ def invoice_list():
     invoices = dao.load_invoice(current_user.id)
     return render_template('invoice_list.html', invoices=invoices)
 
+
 # Nhập sách vào kho
-@app.route('/import-book', methods = ['GET', 'POST'])
+@app.route('/import-book', methods=['GET', 'POST'])
 def import_books():
     if request.method == 'POST':
         book_id = request.form.get('book_id')
@@ -245,6 +250,7 @@ def import_books():
     books = dao.load_books()
     return render_template('import_book.html', books=books)
 
+
 # Các đơn hàng Online và nhận tại Store
 @app.route('/orders')
 def show_orders():
@@ -273,12 +279,14 @@ def order_detail(saleInvoice_id):
 
     return render_template('order_detail.html', sale_invoice=sale_invoice, details=details)
 
-@app.route('/customers', methods = ['GET'])
+
+@app.route('/customers', methods=['GET'])
 def customers():
-    orders = SaleInvoice.query.filter(SaleInvoice.customer_id==None).all()
+    orders = SaleInvoice.query.filter(SaleInvoice.customer_id == None).all()
     return render_template('customers.html', orders=orders)
 
-@app.route('/customers_detail/<int:saleInvoice_id>', methods = ['GET'])
+
+@app.route('/customers_detail/<int:saleInvoice_id>', methods=['GET'])
 def customer_detail(saleInvoice_id):
     sale_invoice = SaleInvoice.query.get(saleInvoice_id)
     details = db.session.query(
@@ -286,8 +294,9 @@ def customer_detail(saleInvoice_id):
         DetailInvoice.quantity,
         (DetailInvoice.quantity * Book.price).label('total_price')
     ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
-    .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
+        .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
     return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details)
+
 
 @app.route('/invoice/view/<int:invoice_id>')
 @login_required
@@ -295,7 +304,8 @@ def view_invoice(invoice_id):
     invoice = SaleInvoice.query.get_or_404(invoice_id)
     return render_template('view_invoice.html', invoice=invoice)
 
-@app.route('/payment' , methods=['POST'])
+
+@app.route('/payment', methods=['POST'])
 def payment_page():
     totalAmount = 0
     cart = Cart.query.filter_by(user_id=current_user.id).first()
@@ -313,7 +323,8 @@ def payment_page():
 
     return render_template('payment.html', books=books, totalAmount=totalAmount)
 
-@app.route('/checkout' , methods=['POST'])
+
+@app.route('/checkout', methods=['POST'])
 @login_required
 def check_out():
     if request.method == 'POST':
@@ -386,7 +397,8 @@ def account_page():
         details = dao.load_invoice_details(invoice.id)  # Truy vấn chi tiết hóa đơn
         invoice_details[invoice.id] = details  # Lưu chi tiết hóa đơn vào dictionary theo ID của hóa đơn
 
-    return render_template('accountcustomer.html', invoices=invoices, favorites=favorites, invoice_details=invoice_details)
+    return render_template('accountcustomer.html', invoices=invoices, favorites=favorites,
+                           invoice_details=invoice_details)
 
 
 @app.route('/cart')
@@ -416,7 +428,7 @@ def cart_page():
                 })
         for b in books_in_cart:
             total_price += b['total']
-    else :
+    else:
         return redirect('/login')
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
@@ -429,7 +441,7 @@ def add_to_cart():
 
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
-        dao.insert_book_to_cart(user_id , book_id)
+        dao.insert_book_to_cart(user_id, book_id)
         flash('Them vao gio hang thanh cong!!!')
         return redirect('/ourstore')
 
@@ -531,7 +543,7 @@ def edit_profile():
                 updated = True
             else:
                 err_msg = "Mat khau khong dung!!!"
-                return render_template('editprofile.html' , msg = err_msg)
+                return render_template('editprofile.html', msg=err_msg)
         if avatar:
             res = cloudinary.uploader.upload(avatar)
             avatar_path = res['secure_url']
@@ -543,7 +555,7 @@ def edit_profile():
             err_msg = "Cap nhat thanh cong"
 
     # Phương thức GET: hiển thị form
-    return render_template('editprofile.html' , msg = err_msg)
+    return render_template('editprofile.html', msg=err_msg)
 
 
 @app.route('/toggle_favorite', methods=['POST'])
@@ -575,6 +587,7 @@ def toggle_favorite():
 
     return jsonify({'success': False, 'message': 'Invalid action'})
 
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
@@ -594,7 +607,115 @@ def admin_login():
 
     return render_template('login.html')
 
+
+@app.route("/order", methods=["POST"])
+def order():
+    if request.method == 'POST':
+        total = request.form.get('total')
+        amount = round(float(total))
+
+        # Tạo một instance của ZaloPayDAO
+        zalopay_dao = dao.ZaloPayDAO()
+
+        # Tạo đơn hàng và lấy URL thanh toán
+        pay_url = zalopay_dao.create_order(amount)
+
+        if "Error" not in pay_url:
+            return redirect(pay_url)  # Chuyển hướng đến ZaloPay thanh toán
+        else:
+            return pay_url  # Trả về thông báo lỗi nếu có
+
+
+import json
+from flask import request, jsonify, redirect
+from datetime import datetime
+
+
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    status = request.args.get("status")
+    if status == "1":
+        user_id = current_user.id
+
+        # Lấy giỏ hàng của người dùng
+        cart = Cart.query.filter_by(user_id=user_id).first()
+        # Lấy chi tiết giỏ hàng
+        cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+
+        sale_invoice = SaleInvoice(
+            paymentStatus="Success",
+            customer_name=current_user.name,
+            customer_id=user_id,
+            orderDate=datetime.utcnow()
+        )
+        print(sale_invoice)
+        db.session.add(sale_invoice)
+        db.session.commit()  # Lưu SaleInvoice để có ID
+
+        # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
+        for detail in cart_details:
+            detail_invoice = DetailInvoice(
+                book_id=detail.book_id,
+                saleInvoice_id=sale_invoice.id,
+                quantity=detail.quantity
+            )
+            db.session.add(detail_invoice)
+
+
+        CartDetail.query.filter_by(cart_id=cart.id).delete()
+        db.session.delete(cart)
+        db.session.commit()
+
+        # Trả về phản hồi thành công
+        return redirect("account")
+    else:
+        return "Status not 1"
+    # try:
+    #
+    #     # Kiểm tra xem có dữ liệu trong request không
+    #     if not request.data:
+    #         return "No data received", 400
+    #
+    #     # Log dữ liệu thô để kiểm tra
+    #     print(f"Request Data: {request.data.decode('utf-8')}")
+    #
+    #     # Kiểm tra xem Content-Type có phải là JSON không
+    #     if request.content_type == "application/json":
+    #         data = request.json  # Lấy dữ liệu JSON
+    #     else:
+    #         # Nếu không phải JSON, cố gắng giải mã dữ liệu thô
+    #         data = json.loads(request.data.decode("utf-8"))
+    #
+    #     # Kiểm tra dữ liệu có hợp lệ không
+    #     if not data:
+    #         return "Invalid request: No data received", 400
+    #
+    #     # Log dữ liệu đã phân tích
+    #     print(f"Parsed Data: {data}")
+    #
+    #     # Kiểm tra trạng thái thanh toán (giả sử thành công nếu `return_code == 1`)
+    #     if data.get("return_code") != 1:
+    #         return f"Payment failed: {data.get('return_message', 'No message provided')}", 400
+    #
+    #     # Kiểm tra người dùng có được xác thực không
+    #     if not current_user.is_authenticated:
+    #         return "User not authenticated", 401
+    #
+    #
+    #
+    #     except Exception as e:
+    #         db.session.rollback()  # Hoàn tác nếu có lỗi
+    #         return f"Error processing order: {str(e)}", 500
+    #
+    # except Exception as e:
+    #     # Trả về lỗi nếu có vấn đề trong việc xử lý yêu cầu
+    #     return f"Error parsing request: {str(e)}", 400
+    #
+
+
 if __name__ == '__main__':
     from bookstoremanagement.admin import *
+
     init_scheduler()
+
     app.run(debug=True)
