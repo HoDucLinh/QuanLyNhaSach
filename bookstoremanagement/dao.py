@@ -5,6 +5,7 @@ from bookstoremanagement import db
 from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, Regulation
 from sqlalchemy.sql import extract
 from datetime import datetime, timedelta
+from sqlalchemy import func, extract, Integer
 
 def load_books(cate_id=None, kw=None):
     query = Book.query
@@ -48,25 +49,6 @@ def insert_book_to_cart(user_id , book_id ):
         db.session.add(cart_detail)
 
     db.session.commit()
-
-# def add_user(name, username, password, avatar, email):
-#     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-#     u = None
-#     if avatar:
-#         u = User(name=name, 
-#                 username=username, 
-#                 password=password, 
-#                 avatar=avatar, 
-#                 email=email,
-#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
-#     else:
-#         u = User(name=name, 
-#                 username=username, 
-#                 password=password, 
-#                 email=email,
-#                 user_role=UserRole.USER)  # Thêm user_role mặc định là USER
-#     db.session.add(u)
-#     db.session.commit()
 
 def add_user(name , username , password , avatar , email ):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
@@ -135,6 +117,8 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
 
     return p.all()
 
+
+
 # thong ke doanh thu theo cate loc theo nam (toàn bộ)
 def category_revenue_month(year):
     return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
@@ -144,21 +128,49 @@ def category_revenue_month(year):
                      .filter(SaleInvoice.paymentStatus == 'Paid')\
                      .group_by(extract('month', SaleInvoice.orderDate)).all()
 
-# thong ke doanh thu theo cate loc theo tháng + nam
+
+
+# ke doanh thu theo cate loc theo tháng + nam
 def book_quantity_month(year, month=None):
     query = db.session.query(
         extract('month', SaleInvoice.orderDate),
         Book.name,
+        # Book.category_id,
         func.sum(DetailInvoice.quantity)
     ).join(DetailInvoice, DetailInvoice.saleInvoice_id == SaleInvoice.id)\
      .join(Book, Book.id == DetailInvoice.book_id)\
      .filter(extract('year', SaleInvoice.orderDate) == year)\
      .filter(SaleInvoice.paymentStatus == 'Paid')
-    
+
     if month:
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
-        
+
     return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
+
+
+# Hàm in cho thống kê cho loại 1
+def category_revenue_detail(kw=None, from_date=None, to_date=None):
+    query = (db.session.query(
+        Category.name.label('category_name'),
+        Book.name.label('book_name'),
+        func.sum(DetailInvoice.quantity * Book.price).label('revenue'),
+        func.sum(DetailInvoice.quantity).label('quantity')
+    ).join(Book, Category.id == Book.category_id)
+     .join(DetailInvoice, DetailInvoice.book_id == Book.id)
+     .join(SaleInvoice, SaleInvoice.id == DetailInvoice.saleInvoice_id)
+     .filter(SaleInvoice.paymentStatus == 'Paid')
+     .group_by(Category.name, Book.name))
+
+    if kw:
+        query = query.filter(Category.name.contains(kw))
+
+    if from_date:
+        query = query.filter(SaleInvoice.orderDate >= from_date)
+
+    if to_date:
+        query = query.filter(SaleInvoice.orderDate <= to_date)
+
+    return query.all()
 
 # ========================= KIỂM TRA QUY ĐỊNH
 def get_current_regulations():

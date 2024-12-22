@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .header h1 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+      .header p {
+        color: #7f8c8d;
+        margin: 5px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #3498db;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      tr:hover {
+        background-color: #e9e9e9;
+      }
+      .percentage {
+        color: #27ae60;
+        font-weight: bold;
+      }
+      .total-row {
+        font-weight: bold;
+        background-color: #eef2f5;
+      }
+      .print-btn {
+        background-color: #2ecc71;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+      .print-btn:hover {
+        background-color: #27ae60;
+      }
+      @media print {
+        body {
+          background-color: white;
+          margin: 0;
+          padding: 20px;
+        }
+        .container {
+          box-shadow: none;
+          max-width: 100%;
+          padding: 0;
+        }
+        .print-btn {
+          display: none;
+        }
+        th {
+          background-color: #3498db !important;
+          color: white !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        tr:nth-child(even) {
+          background-color: #f2f2f2 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .total-row {
+          background-color: #eef2f5 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.print()" class="print-btn">
+            <i class="fas fa-print"></i> In báo cáo PDF
+        </button>
+
+        <div class="header">
+            <h1>BÁO CÁO DOANH THU THEO THÁNG</h1>
+            <p>Từ ngày: {{ from_date if from_date else 'Tất cả' }} - Đến ngày: {{ to_date if to_date else 'Tất cả' }}</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Thể loại</th>
+<!--                    <th>Tên sách</th>-->
+                    <th>Doanh thu</th>
+                    <th>Số lượt thuê</th>
+                    <th>Tỷ lệ (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_revenue = namespace(value=0) %}
+                {% for stat in stats %}
+                    {% set total_revenue.value = total_revenue.value + stat.revenue %}
+                {% endfor %}
+
+                {% for stat in stats %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ stat.category_name }}</td>
+<!--                    <td>{{ stat.book_name }}</td>-->
+                    <td>{{ "{:,.0f}".format(stat.revenue) }} VND</td>
+                    <td>{{ stat.quantity }}</td>
+                    <td class="percentage">
+                        {{ "%.2f"|format(stat.revenue / total_revenue.value * 100) }}%
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr class="total-row">
+                    <td colspan="3">Tổng cộng</td>
+                    <td>{{ "{:,.0f}".format(total_revenue.value) }} VND</td>
+                    <td>100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, session, url_for, jsonify, flash
+from flask import render_template, request, redirect, session, url_for, jsonify, flash, send_file
 from sqlalchemy import func
 from bookstoremanagement import app, dao, db , login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
@@ -226,6 +226,37 @@ def admin_login():
             flash('Invalid username or password or not admin role', 'error')
 
     return render_template('login.html')
+
+
+@app.route('/book_revenue-report')
+@login_required
+def revenue_report():
+    year = request.args.get('year', datetime.now().year)
+    month = request.args.get('month')
+
+    if month:
+        month = int(month)
+
+    book_stats = dao.book_quantity_month(year=year, month=month)
+
+    return render_template('book_revenue_report.html',
+                           book_stats=book_stats,
+                           year=year,
+                           month=month)
+
+@app.route('/category-revenue-report')
+@login_required
+def category_revenue_report():
+    kw = request.args.get('kw')
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+
+    stats = dao.category_revenue_detail(kw=kw, from_date=from_date, to_date=to_date)
+
+    return render_template('category_revenue_report.html',
+                           stats=stats,
+                           from_date=from_date,
+                           to_date=to_date)
 
 if __name__ == '__main__':
     from bookstoremanagement.admin import *

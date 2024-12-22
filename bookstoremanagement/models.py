@@ -33,7 +33,7 @@ class User(db.Model , UserMixin):
     # 1 khách hàng có thể có nhiều hóa đơn
     customer_invoices = relationship('SaleInvoice', backref='customer', lazy=True,foreign_keys='SaleInvoice.customer_id')
     # 1 admin có thể tạo nhiều report
-    reports = relationship('Report', backref='report', lazy=True)
+    # reports = relationship('Report', backref='report', lazy=True)
     # 1 nhân viên có the tạo nhiều hóa đơn nhập kho
     stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
     #1 customer có thể có nhiều sách yêu thích
@@ -43,15 +43,15 @@ class User(db.Model , UserMixin):
         return self.name
 
 
-class Report(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    reportDate = db.Column(db.Date)
-    reportType = db.Column(db.String(100))
-    #lưu admin tạo report
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-
-    def __str__(self):
-        return self.name
+# class Report(db.Model):
+#     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
+#     reportDate = db.Column(db.Date)
+#     reportType = db.Column(db.String(100))
+#     #lưu admin tạo report
+#     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+#
+#     def __str__(self):
+#         return self.name
 
 
 class StockInvoice(db.Model):
