@@ -323,65 +323,65 @@ def payment_page():
     return render_template('payment.html', books=books, totalAmount=totalAmount)
 
 
-@app.route('/checkout', methods=['POST'])
-@login_required
-def check_out():
-    if request.method == 'POST':
-        shipping_method = request.form.get('shippingMethod')
-        selection = request.form.get('selection')
-        if shipping_method == 'homeDelivery' or (shipping_method == 'storePickup' and selection == 'payOnline'):
-            invoice = SaleInvoice(
-                paymentStatus='Paid',
-                customer_name=current_user.name,
-                customer_id=current_user.id,
-                sale_id=None,
-                orderDate=datetime.utcnow()
-            )
-            db.session.add(invoice)
-            db.session.commit()
-            cart = Cart.query.filter_by(user_id=current_user.id).first()
-            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
-            for c in cart_details:
-                detail_invoice = DetailInvoice(
-                    book_id=c.book_id,
-                    saleInvoice_id=invoice.id,
-                    quantity=c.quantity
-                )
-                db.session.add(detail_invoice)
-            db.session.commit()
-            cart = Cart.query.filter_by(user_id=current_user.id).first()
-            cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
-            for c in cart_detail:
-                db.session.delete(c)
-            db.session.commit()
-            return redirect('/account')
-        elif shipping_method == 'storePickup' and selection == 'payAtStore':
-            invoice = SaleInvoice(
-                paymentStatus='Pending',
-                customer_name=current_user.name,
-                customer_id=current_user.id,
-                sale_id=None,
-                orderDate=datetime.utcnow()
-            )
-            db.session.add(invoice)
-            db.session.commit()
-            cart = Cart.query.filter_by(user_id=current_user.id).first()
-            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
-            for c in cart_details:
-                detail_invoice = DetailInvoice(
-                    book_id=c.book_id,
-                    saleInvoice_id=invoice.id,
-                    quantity=c.quantity
-                )
-                db.session.add(detail_invoice)
-            db.session.commit()
-            cart = Cart.query.filter_by(user_id=current_user.id).first()
-            cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
-            for c in cart_detail:
-                db.session.delete(c)
-            db.session.commit()
-            return redirect('/account')
-    return render_template('payment.html')
+# @app.route('/checkout', methods=['POST'])
+# @login_required
+# def check_out():
+#     if request.method == 'POST':
+#         shipping_method = request.form.get('shippingMethod')
+#         selection = request.form.get('selection')
+#         if shipping_method == 'homeDelivery' or (shipping_method == 'storePickup' and selection == 'payOnline'):
+#             invoice = SaleInvoice(
+#                 paymentStatus='Paid',
+#                 customer_name=current_user.name,
+#                 customer_id=current_user.id,
+#                 sale_id=None,
+#                 orderDate=datetime.utcnow()
+#             )
+#             db.session.add(invoice)
+#             db.session.commit()
+#             cart = Cart.query.filter_by(user_id=current_user.id).first()
+#             cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+#             for c in cart_details:
+#                 detail_invoice = DetailInvoice(
+#                     book_id=c.book_id,
+#                     saleInvoice_id=invoice.id,
+#                     quantity=c.quantity
+#                 )
+#                 db.session.add(detail_invoice)
+#             db.session.commit()
+#             cart = Cart.query.filter_by(user_id=current_user.id).first()
+#             cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
+#             for c in cart_detail:
+#                 db.session.delete(c)
+#             db.session.commit()
+#             return redirect('/account')
+#         elif shipping_method == 'storePickup' and selection == 'payAtStore':
+#             invoice = SaleInvoice(
+#                 paymentStatus='Pending',
+#                 customer_name=current_user.name,
+#                 customer_id=current_user.id,
+#                 sale_id=None,
+#                 orderDate=datetime.utcnow()
+#             )
+#             db.session.add(invoice)
+#             db.session.commit()
+#             cart = Cart.query.filter_by(user_id=current_user.id).first()
+#             cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+#             for c in cart_details:
+#                 detail_invoice = DetailInvoice(
+#                     book_id=c.book_id,
+#                     saleInvoice_id=invoice.id,
+#                     quantity=c.quantity
+#                 )
+#                 db.session.add(detail_invoice)
+#             db.session.commit()
+#             cart = Cart.query.filter_by(user_id=current_user.id).first()
+#             cart_detail = CartDetail.query.filter_by(cart_id=cart.id).all()
+#             for c in cart_detail:
+#                 db.session.delete(c)
+#             db.session.commit()
+#             return redirect('/account')
+#     return render_template('payment.html')
 
 
 @app.route('/account')
@@ -660,13 +660,14 @@ def callback():
         cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
 
         sale_invoice = SaleInvoice(
-            paymentStatus="Success",
+            paymentStatus="Paid",
             customer_name=current_user.name,
             customer_id=user_id,
             orderDate=datetime.utcnow()
         )
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
+
 
         # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
         for detail in cart_details:
@@ -676,6 +677,7 @@ def callback():
                 quantity=detail.quantity
             )
             db.session.add(detail_invoice)
+            dao.updateQuantityBook(book_id=detail_invoice.book_id, quantity=detail_invoice.quantity)
         CartDetail.query.filter_by(cart_id=cart.id).delete()
         db.session.delete(cart)
         db.session.commit()

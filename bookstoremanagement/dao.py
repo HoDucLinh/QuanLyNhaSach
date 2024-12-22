@@ -226,6 +226,7 @@ def category_revenue_month(year):
                      .filter(SaleInvoice.paymentStatus == 'Paid')\
                      .group_by(extract('month', SaleInvoice.orderDate)).all()
 
+
 # thong ke doanh thu theo cate loc theo tháng + nam
 def book_quantity_month(year, month=None):
     query = db.session.query(
@@ -280,3 +281,9 @@ def check_order_cancellation():
 def get_cart_details(sale_invoice_id):
     # Truy vấn chi tiết giỏ hàng của một đơn hàng
     return db.session.query(CartDetail, Book).join(Book).filter(CartDetail.saleInvoice_id == sale_invoice_id).all()
+
+def updateQuantityBook(book_id,quantity):
+    book = Book.query.filter_by(id = book_id).first()
+    if book:
+        book.quantity -= quantity
+        db.session.commit()
