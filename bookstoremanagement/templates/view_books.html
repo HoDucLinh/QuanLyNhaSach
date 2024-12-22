@@ -3,182 +3,377 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bookstore Dashboard - Manage your book inventory">
   <title>View Books - Bookstore Dashboard</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    :root {
+      --primary-color: #343a40;
+      --secondary-color: #495057;
+      --accent-color: #d9d2e9;
+      --hover-color: #5a6268;
+      --text-light: #fff;
+      --sidebar-width: 250px;
+    }
+
     body {
       overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     }
+
     .sidebar {
-      position: sticky;
+      position: fixed;
       top: 0;
-      width: 250px;
-      background-color: #343a40;
-      color: #fff;
+      left: 0;
+      width: var(--sidebar-width);
+      background-color: var(--primary-color);
+      color: var(--text-light);
       height: 100vh;
       overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 1000;
     }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
     .sidebar a {
-      color: #d9d2e9;
+      color: var(--accent-color);
       text-decoration: none;
-      padding: 10px 15px;
-      display: block;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
     }
+
+    .sidebar a i {
+      width: 24px;
+      margin-right: 10px;
+    }
+
     .sidebar a:hover {
-      background-color: #343a40;
-      color: #fff;
+      background-color: var(--secondary-color);
+      color: var(--text-light);
+      transform: translateX(5px);
     }
+
     .sidebar .active {
-      background-color: #343a40;
-      color: #fff;
+      background-color: var(--secondary-color);
+      color: var(--text-light);
+      border-left: 4px solid var(--accent-color);
     }
+
+    /* Điều chỉnh main content */
     .main-content {
-      margin-left: 0;
+      margin-left: var(--sidebar-width);
       padding: 20px;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      width: calc(100% - var(--sidebar-width)); /* Thêm width để đảm bảo chiều rộng chính xác */
+      max-width: 1400px; /* Giới hạn chiều rộng tối đa */
+      margin: 0 auto 0 var(--sidebar-width); /* Căn giữa và giữ margin-left cho sidebar */
     }
-    .card-header {
-      background-color: #343a40;
-      color: #fff;
+
+    /* Điều chỉnh container trong main content */
+    .container {
+      max-width: 100%; /* Container sẽ full width trong main-content */
+      padding: 0; /* Bỏ padding của container vì main-content đã có padding */
     }
-    .filter-section {
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px; /* Giảm padding trên mobile */
+      }
+
+      .container {
+        padding: 0 10px; /* Thêm padding nhỏ cho container trên mobile */
+      }
+    }
+
+    /* Điều chỉnh card và table */
+    .card {
+      margin-bottom: 20px;
+    }
+
+    .table-responsive {
+      margin: -1px; /* Fix border issues */
+    }
+
+    .filter-container {
+      margin-bottom: 20px;
+      padding: 15px;
+    }
+
+    /* Cải thiện hiển thị bảng trên các màn hình khác nhau */
+    @media (max-width: 992px) {
+      .table {
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .table {
+        font-size: 0.8rem;
+      }
+
+      .table td, .table th {
+        padding: 10px 8px;
+      }
+    }
+
+    /* Loading animation */
+    .loading-spinner {
       display: none;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--secondary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
-    .filter-section.active {
-      display: block;
+/* Điều chỉnh main content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      width: calc(100% - var(--sidebar-width)); /* Thêm width để đảm bảo chiều rộng chính xác */
+      max-width: 1400px; /* Giới hạn chiều rộng tối đa */
+      margin: 0 auto 0 var(--sidebar-width); /* Căn giữa và giữ margin-left cho sidebar */
+    }
+
+    /* Điều chỉnh container trong main content */
+    .container {
+      max-width: 100%; /* Container sẽ full width trong main-content */
+      padding: 0; /* Bỏ padding của container vì main-content đã có padding */
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px; /* Giảm padding trên mobile */
+      }
+
+      .container {
+        padding: 0 10px; /* Thêm padding nhỏ cho container trên mobile */
+      }
+    }
+
+    /* Điều chỉnh card và table */
+    .card {
+      margin-bottom: 20px;
+    }
+
+    .table-responsive {
+      margin: -1px; /* Fix border issues */
+    }
+
+    .filter-container {
+      margin-bottom: 20px;
+      padding: 15px;
+    }
+
+    /* Cải thiện hiển thị bảng trên các màn hình khác nhau */
+    @media (max-width: 992px) {
+      .table {
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .table {
+        font-size: 0.8rem;
+      }
+
+      .table td, .table th {
+        padding: 10px 8px;
+      }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Accessibility improvements */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
+  <!-- Skip to main content link for accessibility -->
+  <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+
+  <!-- Sidebar Toggle Button for Mobile -->
+  <button id="sidebarToggle" class="btn btn-primary d-md-none position-fixed" style="z-index: 1001; top: 10px; left: 10px;">
+    <i class="fas fa-bars"></i>
+  </button>
+
   <div class="d-flex">
-    <div class="sidebar">
-      <h4 class="text-center py-3">Bookstore Panel</h4>
-      <a href="{{ url_for('sale_employee_page')}}" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
-      <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <h4 class="text-center py-4">Bookstore Panel</h4>
+      <nav aria-label="Main navigation">
+        <a href="{{ url_for('sale_employee_page')}}"><i class="fas fa-home me-2"></i>Dashboard</a>
+      <a href="{{ url_for('view_books')}}" class="active"><i class="fas fa-book me-2"></i>Books</a>
       <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Import Books</a>
-      <a href=""><i class="fas fa-users me-2"></i>Customers</a>
-      <a href="#"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
+      <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
+      <a href="{{ url_for('show_orders')}}"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
+      </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="main-content flex-grow-1">
-      <!-- Header -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="#">Bookstore Dashboard</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-              <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-envelope"></i> Inbox</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a>
-              </li>
-            </ul>
+    <main class="main-content" id="main-content">
+      <!-- Header --
+
+      <!-- Book List Section -->
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>Book List</h2>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-container">
+          <div class="row">
+            <div class="col-md-6">
+              <button class="btn btn-secondary w-100 mb-2 mb-md-0" onclick="toggleFilter('category')">
+                <i class="fas fa-filter me-2"></i>Filter by Category
+              </button>
+            </div>
+            <div class="col-md-6">
+              <button class="btn btn-secondary w-100" onclick="toggleFilter('search')">
+                <i class="fas fa-search me-2"></i>Search by Title
+              </button>
+            </div>
+          </div>
+
+          <div id="categoryFilter" class="filter-section mt-3">
+            <form method="GET" action="/view-books" class="row g-3">
+              <div class="col-md-8">
+                <select class="form-select" name="category_id" aria-label="Select category">
+                  <option value="">All Categories</option>
+                  {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == request.args.get('category_id') %}selected{% endif %}>
+                      {{ category.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="searchFilter" class="filter-section mt-3">
+            <form method="GET" action="/view-books" class="row g-3">
+              <div class="col-md-8">
+                <input type="text" class="form-control" name="search_book" placeholder="Enter book title..." value="{{ request.args.get('search_book', '') }}">
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+              </div>
+            </form>
           </div>
         </div>
-      </nav>
 
-      <!-- View Books Content -->
-      <div class="container mt-4">
-        <h2>Book List</h2>
-
-        <!-- Hiển thị thông báo thể loại đã chọn -->
-        {% if selected_category_name %}
-          <div class="alert alert-info">
-            <strong>Category:</strong> {{ selected_category_name }}
-          </div>
-        {% endif %}
-
-        <!-- Two buttons to toggle between filter types -->
-        <div class="mb-4">
-          <button class="btn btn-secondary" onclick="toggleFilter('category')">Filter by Category</button>
-          <button class="btn btn-secondary ms-2" onclick="toggleFilter('search')">Search by Title</button>
-        </div>
-
-        <!-- Category Filter -->
-        <div id="categoryFilter" class="filter-section {% if filter_type == 'category' %}active{% endif %}">
-          <form method="GET" action="/view-books" class="d-flex mb-4">
-            <select class="form-select me-2" name="category_id" onchange="this.form.submit()">
-              <option value="">All Categories</option>
-              {% for category in categories %}
-                <option value="{{ category.id }}" {% if category.id == request.args.get('category_id') %}selected{% endif %}>
-                  {{ category.name }}
-                </option>
-              {% endfor %}
-            </select>
-          </form>
-        </div>
-
-        <!-- Title Search Filter -->
-        <div id="searchFilter" class="filter-section {% if filter_type == 'search' %}active{% endif %}">
-          <form method="GET" action="/view-books" class="d-flex mb-4">
-            <input type="text" class="form-control" name="search_book" placeholder="Search for a book" value="{{ request.args.get('search_book', '') }}">
-            <button type="submit" class="btn btn-primary ms-2">Search</button>
-          </form>
-        </div>
-
-        <!-- Book List Table -->
+        <!-- Books Table -->
         <div class="card">
-          <div class="card-header">
-            Books Available
-          </div>
-          <div class="card-body">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Author</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for book in books %}
-                  <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ book['name'] }}</td>
-                    <td>{{ book['publisherName'] }}</td>
-                    <td>{{ book['category_id'] }}</td>
-                    <td>{{ book['price'] }}</td>
-                    <td>{{ book['quantity'] }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Books Available</h5>
+    <div class="loading-spinner" id="loadingSpinner"></div>
   </div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Title</th>
+          <th scope="col">Author</th>
+          <th scope="col">Category</th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ book['name'] }}</td>
+            <td>{{ book['publisherName'] }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ book['category_id'] }}</span>
+            </td>
+            <td>${{ "%.2f"|format(book['price']) }}</td>
+            <td>
+              {% if book['quantity'] > 0 %}
+                <span class="badge bg-success">{{ book['quantity'] }}</span>
+              {% else %}
+                <span class="badge bg-danger">Out of stock</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-  <!-- Bootstrap JS -->
+  <!-- Bootstrap Bundle with Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+
+    // Filter toggle functionality
     function toggleFilter(filterType) {
-      // Đặt filter_type theo filter đã chọn
-      var categoryFilter = document.getElementById('categoryFilter');
-      var searchFilter = document.getElementById('searchFilter');
+      const categoryFilter = document.getElementById('categoryFilter');
+      const searchFilter = document.getElementById('searchFilter');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+
+      // Show loading spinner
+      loadingSpinner.style.display = 'block';
 
       if (filterType === 'category') {
-        categoryFilter.classList.add('active');
-        searchFilter.classList.remove('active');
+        categoryFilter.style.display = 'block';
+        searchFilter.style.display = 'none';
       } else if (filterType === 'search') {
-        categoryFilter.classList.remove('active');
-        searchFilter.classList.add('active');
+        categoryFilter.style.display = 'none';
+        searchFilter.style.display = 'block';
       }
+
+      // Hide loading spinner after a short delay
+      setTimeout(() => {
+        loadingSpinner.style.display = 'none';
+      }, 500);
     }
+
+
   </script>
 </body>
 </html>

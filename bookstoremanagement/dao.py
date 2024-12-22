@@ -145,6 +145,27 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
 
     return p.all()
 
+# Load Sale Invoice
+def view_invoice(saleInvoice_id):
+    sale_invoice = SaleInvoice.query.get_or_404(saleInvoice_id)
+    details = db.session.query(
+        DetailInvoice.id,
+        Book.name.label('book_name'),
+        Category.name.label('category'),
+        DetailInvoice.quantity,
+        Book.price.label('price'),
+        DetailInvoice.book_id
+    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
+        .join(Category, Category.id == Book.category_id) \
+        .filter(DetailInvoice.saleInvoice_id == saleInvoice_id) \
+        .all()
+
+    # Tính tổng tiền
+    total_amount = sum(detail.quantity * detail.price for detail in details)
+
+    return sale_invoice, details, total_amount
+
+
 # thong ke doanh thu theo cate loc theo nam
 def category_revenue_month(year):
     return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
@@ -206,3 +227,9 @@ def check_order_cancellation():
 def get_cart_details(sale_invoice_id):
     # Truy vấn chi tiết giỏ hàng của một đơn hàng
     return db.session.query(CartDetail, Book).join(Book).filter(CartDetail.saleInvoice_id == sale_invoice_id).all()
+
+def updateQuantityBook(book_id,quantity):
+    book = Book.query.filter_by(id = book_id).first()
+    if book:
+        book.quantity -= quantity
+        db.session.commit()

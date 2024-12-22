@@ -132,6 +132,7 @@ def sale_employee_page():
         return render_template('sale_employee.html')
     return redirect(url_for('user_login_page'))
 
+
 # Quản lý sách
 @app.route('/view-books', methods = ['GET'])
 def view_books():
@@ -176,7 +177,8 @@ def create_invoice():
         invoice = SaleInvoice(
             customer_name=customer_name,
             orderDate=order_date,
-            sale_id=sale_id
+            sale_id=sale_id,
+            paymentStatus='Paid'
         )
         db.session.add(invoice)
         db.session.flush()
@@ -197,48 +199,67 @@ def create_invoice():
                 )
                 db.session.add(item)
 
+                dao.updateQuantityBook(int(book_id), int(quantity))
+
         db.session.commit()
         flash('Tạo hóa đơn thành công', 'success')
-        return redirect(url_for('invoice_list'))
+        return redirect(url_for('view_invoice', saleInvoice_id=invoice.id))
     return render_template('create_invoice.html', books=books)
 
-# Danh sách các hóa đơn
-@app.route('/create-invoice/list')
+@app.route('/invoice/view/<int:saleInvoice_id>',methods = ['GET'])
 @login_required
-def invoice_list():
-    invoices = dao.load_invoice(current_user.id)
-    return render_template('invoice_list.html', invoices=invoices)
+def view_invoice(saleInvoice_id):
+    sale_invoice, details, total_amount= dao.view_invoice(saleInvoice_id)
+
+    # Trả về kết quả cho view (template)
+    return render_template('view_invoice.html', saleInvoice_id=saleInvoice_id, sale_invoice=sale_invoice,
+                           details=details, total_amount=total_amount)
 
 # Nhập sách vào kho
-@app.route('/import-book', methods = ['GET', 'POST'])
+@app.route('/import-book', methods=['GET', 'POST'])
 def import_books():
     if request.method == 'POST':
-        book_id = request.form.get('book_id')
-        quantity_to_import = int(request.form.get('quantity'))
+        book_ids = request.form.getlist('book_id[]')
+        quantities = request.form.getlist('quantity[]')
+        import_details = []
 
-        # Kiểm tra điều kiện nhập hàng
-        is_valid, message = check_import_conditions(book_id)
+        for book_id, quantity in zip(book_ids, quantities):
+            if book_id and quantity:
+                quantity = int(quantity)
 
-        if not is_valid:
-            flash(message, 'danger')
-            return redirect(url_for('import_books'))
+                # Kiểm tra điều kiện nhập hàng
+                is_valid, message = check_import_conditions(book_id)
+                if not is_valid:
+                    flash(message, 'danger')
+                    continue
 
-        is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity_to_import)
-        if not is_valid_min_quantity:
-            flash(message_min_quantity, 'danger')
-            return redirect(url_for('import_books'))
+                is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity)
+                if not is_valid_min_quantity:
+                    flash(message_min_quantity, 'danger')
+                    continue
 
-        # Nếu điều kiện nhập hàng hợp lệ
-        book = dao.load_books(book_id)  # Tải sách từ cơ sở dữ liệu
-        if not book:
-            flash("Sách không tồn tại", 'danger')
-            return redirect(url_for('import_books'))
+                book = dao.load_books(book_id)
+                if not book:
+                    flash(f"Sách với ID {book_id} không tồn tại", 'danger')
+                    continue
 
-        # Cập nhật số lượng sách
-        book.quantity += quantity_to_import
-        db.session.commit()
+                # Cập nhật số lượng sách
+                book.quantity += quantity
+                import_details.append({
+                    'book': book,
+                    'quantity': quantity
+                })
 
-        flash(f"Đã nhập {quantity_to_import} cuốn {book.name} vào kho", 'success')
+        if import_details:
+            db.session.commit()
+            # Tạo hóa đơn nhập
+            import_invoice = {
+                'date': datetime.now(),
+                'staff_name': current_user.name,
+                'details': import_details
+            }
+            return render_template('import_invoice.html', invoice=import_invoice)
+
         return redirect(url_for('import_books'))
 
     books = dao.load_books()
@@ -247,7 +268,7 @@ def import_books():
 # Các đơn hàng Online và nhận tại Store
 @app.route('/orders')
 def show_orders():
-    orders = SaleInvoice.query.all()
+    orders = SaleInvoice.query.filter(SaleInvoice.paymentStatus != None).all()
     overdue_orders = dao.check_order_cancellation()
 
     for order in orders:
@@ -255,22 +276,30 @@ def show_orders():
             order.paymentStatus = 'Cancelled'
 
     db.session.commit()
+
     return render_template('orders.html', orders=orders)
 
 
-@app.route('/order_detail/orderNO_<int:saleInvoice_id>', methods=['GET', 'POST'])
+@app.route('/order_detail/<int:saleInvoice_id>', methods=['GET', 'POST'])
 def order_detail(saleInvoice_id):
-    sale_invoice = SaleInvoice.query.get_or_404(saleInvoice_id)
-    details = DetailInvoice.query.filter_by(saleInvoice_id=saleInvoice_id).all()
+    # Lấy hóa đơn và chi tiết hóa đơn từ dao (giả sử bạn đã có phương thức `view_invoice` trong dao)
+    sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
 
     if request.method == 'POST':
         if sale_invoice.paymentStatus == 'Pending':
             sale_invoice.paymentStatus = 'Paid'
+            # Cập nhật số lượng sách sau khi thanh toán
+            for detail in details:
+                book_id = detail.book_id  # Lấy book_id từ chi tiết hóa đơn
+                quantity = detail.quantity  # Lấy số lượng sách từ chi tiết
+                dao.updateQuantityBook(book_id, quantity)  # Gọi hàm updateQuantityBook để cập nhật số lượng sách
             db.session.commit()
-            flash('Thanh toán đã được xác nhận!', 'success')  # Thông báo thành công
-            return redirect(url_for('show_orders'))  # Chuyển hướng về danh sách đơn hàng sau khi cập nhật
+            flash('Thanh toán đã được xác nhận!', 'success')
+            return redirect(url_for('show_orders'))
 
-    return render_template('order_detail.html', sale_invoice=sale_invoice, details=details)
+    return render_template('order_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
+
+
 
 @app.route('/customers', methods = ['GET'])
 def customers():
@@ -279,20 +308,9 @@ def customers():
 
 @app.route('/customers_detail/<int:saleInvoice_id>', methods = ['GET'])
 def customer_detail(saleInvoice_id):
-    sale_invoice = SaleInvoice.query.get(saleInvoice_id)
-    details = db.session.query(
-        Book.name,
-        DetailInvoice.quantity,
-        (DetailInvoice.quantity * Book.price).label('total_price')
-    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
-    .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
-    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details)
+    sale_invoice, details,total_amount = dao.view_invoice(saleInvoice_id)
+    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
 
-@app.route('/invoice/view/<int:invoice_id>')
-@login_required
-def view_invoice(invoice_id):
-    invoice = SaleInvoice.query.get_or_404(invoice_id)
-    return render_template('view_invoice.html', invoice=invoice)
 
 @app.route('/payment' , methods=['POST'])
 def payment_page():
