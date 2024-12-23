@@ -6,7 +6,7 @@ fake = Faker()
 
 def generate_book(index):
     return {
-        "name": f"Sách {index} - {fake.word().capitalize()}",
+        "name": f"{fake.word().capitalize()}",
         "price": random.randint(30000, 100000),
         "publisherName": fake.name(),
         "image": 'https://res.cloudinary.com/dzwsdpjgi/image/upload/v1734358631/images_ejbach.jpg',

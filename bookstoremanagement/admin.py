@@ -73,18 +73,7 @@ class CategoryView(AuthModelView):
         form = super(CategoryView, self).edit_form(obj)
         form.stock_id.choices = self.get_stock_choices()  # Cập nhật choices khi sửa form
         return form
-#
-# Code cũ không dùng được drop down
-# class CategoryView(ModelView):
-#     can_view_details = True
-#     column_searchable_list = ['name']
-#    # form_columns = ['name', 'stock_id'] # hiển thị khi CE
-#     column_list = ['name', 'stock_id'] # hiển thị ở lsv
-#
-#     def on_form_prefill(self, form, id):
-#         category = Category.query.get(id)
-#         if category:
-#             form.stock_id.data = category.stock.name
+
 
 class StockView(AuthModelView):
     column_list = ['id', 'name']

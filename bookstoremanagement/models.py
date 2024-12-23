@@ -1,11 +1,11 @@
 import hashlib
-from datetime import date
+from datetime import date, datetime
 from flask import json
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from sqlalchemy import Enum as SQLEnum
-from bookstoremanagement import app ,db
+from bookstoremanagement import app, db
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -43,25 +43,14 @@ class User(db.Model , UserMixin):
         return self.name
 
 
-# class Report(db.Model):
-#     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-#     reportDate = db.Column(db.Date)
-#     reportType = db.Column(db.String(100))
-#     #lưu admin tạo report
-#     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
-#
-#     def __str__(self):
-#         return self.name
-
-
 class StockInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     createdDate = db.Column(db.Date)
     totalAmount = db.Column(db.Float)
     totalQuantity = db.Column(db.Integer)
     supplierName = db.Column(db.String(100))
-    #lưu nhân viên tạo report
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    # lưu nhân viên tạo report
+    user_id = db.Column(Integer, ForeignKey(User.id), nullable=False)
 
     def __str__(self):
         return self.name
@@ -77,7 +66,6 @@ class Book(db.Model):
     quantity = db.Column(db.Integer)
     category_id = db.Column(Integer, ForeignKey('category.id'), nullable=False)
     favorites = relationship('Favorite', backref='book', lazy=True)
-
 
     def __str__(self):
         return self.name
@@ -103,48 +91,55 @@ class Stock(db.Model):
 
 
 class Cart(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(Integer, ForeignKey(User.id), nullable=False)
+
+    def __int__(self):
+        return self.id
 
     def __str__(self):
-        return self.name
+        return f"Cart {self.id}"  # Hiển thị thông
+
 
 class CartDetail(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
-    cart_id = Column(Integer, ForeignKey(Cart.id), nullable=False)
-    quantity = db.Column(db.Integer , nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    book_id = db.Column(Integer, ForeignKey(Book.id), nullable=False)
+    cart_id = db.Column(Integer, ForeignKey(Cart.id), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
 
     def __str__(self):
-        return self.name
+        return f"CartDetail {self.id}, Book ID {self.book_id}, Quantity {self.quantity}"  # Hiển thị chi tiết giỏ hàng
 
 
 class SaleInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     paymentStatus = db.Column(db.String(100))
-    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # Khóa ngoại tới khách hàng
-    sale_id = Column(Integer, ForeignKey('user.id'), nullable=True)  # Khóa ngoại tới nhân viên bán hàng
-    orderDate = db.Column(db.Date)
+    # nếu mua onl thì lấy tên thông qua customer_id , nếu mua off thì điền thẳng tên
+    customer_name = db.Column(db.String(100), nullable=False)
+    # lưu id của khách hang , nếu = null thì là mua off , nếu c giá trị là mua onl
+    customer_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
+    # lưu id của sale , neu null là mua onl ,neeseu có gia trị là mua off
+    sale_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
+    orderDate = db.Column(db.Date, default=datetime.utcnow())
 
     def __str__(self):
-        return self.name
+        return f"SaleInvoice {self.id}, Customer {self.customer_name}, Status {self.paymentStatus}"
 
 
 class DetailInvoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
-    book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
-    saleInvoice_id = Column(Integer, ForeignKey(SaleInvoice.id), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    book_id = db.Column(Integer, ForeignKey(Book.id), nullable=False)
+    saleInvoice_id = db.Column(Integer, ForeignKey(SaleInvoice.id), nullable=False)
     quantity = db.Column(db.Integer)
 
     def __str__(self):
-        return self.name
-
+        return f"DetailInvoice {self.id}, Book ID {self.book_id}, Quantity {self.quantity}"
 
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    book_id = Column(Integer, ForeignKey(Book.id), nullable=False)
-    customer_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    
+    book_id = db.Column(Integer, ForeignKey(Book.id), nullable=False)
+    customer_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
+
 
 class Regulation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -158,8 +153,7 @@ class Regulation(db.Model):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-
-        stock = Stock(name = "Kho sach chinh")
+        stock = Stock(name="Kho sach chinh")
         db.session.add(stock)
         db.session.commit()
 
@@ -180,17 +174,22 @@ if __name__ == "__main__":
                 db.session.add(book)
         db.session.commit()
 
-        new_user1 = User(name='Ho Duc Linh',username='HDL',password= str(hashlib.md5("hdl".encode('utf-8')).hexdigest()),email='hdl@gmail.com')
-        new_user2 = User(name='Nguyen Quang Khanh',username='NQK',password= str(hashlib.md5("nqk".encode('utf-8')).hexdigest()),email='nqk@gmail.com')
-        admin_user = User(name='Admin',username='admin',password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),user_role=UserRole.ADMIN)
+        new_user1 = User(name='Ho Duc Linh', username='HDL',
+                         password=str(hashlib.md5("hdl".encode('utf-8')).hexdigest()), email='hdl@gmail.com')
+        new_user2 = User(name='Nguyen Quang Khanh', username='NQK',
+                         password=str(hashlib.md5("nqk".encode('utf-8')).hexdigest()), email='nqk@gmail.com')
+        admin_user = User(name='Admin', username='admin', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+                          user_role=UserRole.ADMIN)
+        sale = User(name='Sal12', username='Sale12', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+                    user_role=UserRole.SALE)
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add_all([new_user1,new_user2,admin_user])
+        db.session.add_all([new_user1,new_user2,admin_user,sale])
         db.session.commit()
 
         sale_invoices = [
-            SaleInvoice(id=1, paymentStatus="Paid", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
-            SaleInvoice(id=2, paymentStatus="Pending", customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
-            SaleInvoice(id=3, paymentStatus="Paid", customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
+            SaleInvoice(id=1, paymentStatus="Paid",customer_name="HDL", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
+            SaleInvoice(id=2, paymentStatus="Pending", customer_name="HDL",customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
+            SaleInvoice(id=3, paymentStatus="Paid", customer_name="NQK",customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
         ]
         db.session.add_all(sale_invoices)
         db.session.commit()
