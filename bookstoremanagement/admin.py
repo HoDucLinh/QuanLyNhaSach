@@ -73,18 +73,7 @@ class CategoryView(AuthModelView):
         form = super(CategoryView, self).edit_form(obj)
         form.stock_id.choices = self.get_stock_choices()  # Cập nhật choices khi sửa form
         return form
-#
-# Code cũ không dùng được drop down
-# class CategoryView(ModelView):
-#     can_view_details = True
-#     column_searchable_list = ['name']
-#    # form_columns = ['name', 'stock_id'] # hiển thị khi CE
-#     column_list = ['name', 'stock_id'] # hiển thị ở lsv
-#
-#     def on_form_prefill(self, form, id):
-#         category = Category.query.get(id)
-#         if category:
-#             form.stock_id.data = category.stock.name
+
 
 class StockView(AuthModelView):
     column_list = ['id', 'name']
@@ -135,14 +124,6 @@ class DetailInvoiceView(AuthModelView):
             form.book_id.data = detail_invoice.book.name
             form.saleInvoice_id.data = f"Hóa đơn {detail_invoice.saleInvoice_id} - {detail_invoice.saleInvoice.orderDate}"
 
-class ReportView(AuthModelView):
-    can_view_details = True
-    form_columns = ['reportDate', 'reportType', 'user_id']
-
-    def on_form_prefill(self, form, id):
-        report = Report.query.get(id)
-        if report:
-            form.user_id.data = report.report.name
 
 class LogoutView(BaseView):
     @expose('/')

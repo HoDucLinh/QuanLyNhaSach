@@ -1,8 +1,6 @@
 import hmac
-
 import requests
 import json
-
 from bookstoremanagement import db, app
 import hashlib
 from sqlalchemy import func

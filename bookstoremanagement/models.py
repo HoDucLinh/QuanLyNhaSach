@@ -43,17 +43,6 @@ class User(db.Model , UserMixin):
         return self.name
 
 
-# class Report(db.Model):
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     reportDate = db.Column(db.Date)
-#     reportType = db.Column(db.String(100))
-#     # lưu admin tạo report
-#     user_id = db.Column(Integer, ForeignKey(User.id), nullable=False)
-#
-#     def __str__(self):
-#         return self.name
-
-
 class StockInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     createdDate = db.Column(db.Date)
