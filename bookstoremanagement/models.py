@@ -183,7 +183,7 @@ if __name__ == "__main__":
         sale = User(name='Sal12', username='Sale12', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
                     user_role=UserRole.SALE)
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add_all([new_user1,new_user2,admin_user])
+        db.session.add_all([new_user1,new_user2,admin_user,sale])
         db.session.commit()
 
         sale_invoices = [
