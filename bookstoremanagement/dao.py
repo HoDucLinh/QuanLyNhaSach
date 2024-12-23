@@ -86,6 +86,7 @@ def load_books(book_id=None,cate_id=None, kw=None , page = None):
 
     return query.all()
 
+
 def load_categories():
     return Category.query.all()
 
@@ -100,6 +101,7 @@ def count_books(cate_id=None):
 def load_product_by_id(id):
     book = Book.query.filter_by(id=id).first()
     return book
+
 
 def insert_book_to_cart(user_id , book_id ):
     # Kiểm tra xem người dùng đã có giỏ hàng chưa
@@ -139,10 +141,10 @@ def add_user(name , username , password , avatar , email ):
 
 
 def auth_user(username, password):
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    
-    return User.query.filter(User.username.__eq__(username.strip()),
-                           User.password.__eq__(password)).first()
+
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
+
+    return User.query.filter(User.username.__eq__(username),User.password.__eq__(password)).first()
 
 
 def load_user_by_id(user_id):
@@ -183,7 +185,6 @@ def load_favorite(user_id):
     favorite_books = [favorite.book for favorite in favorites]
     return favorite_books
 
-
 # dem so luong sp trong tung cate ghi de len trang chu
 def category_stats():
     return db.session.query(Category.id, Category.name, func.count(Book.id))\
@@ -214,6 +215,28 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
     return p.all()
 
 # thong ke doanh thu theo cate loc theo nam (toàn bộ)
+# Load Sale Invoice
+def view_invoice(saleInvoice_id):
+    sale_invoice = SaleInvoice.query.get_or_404(saleInvoice_id)
+    details = db.session.query(
+        DetailInvoice.id,
+        Book.name.label('book_name'),
+        Category.name.label('category'),
+        DetailInvoice.quantity,
+        Book.price.label('price'),
+        DetailInvoice.book_id
+    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
+        .join(Category, Category.id == Book.category_id) \
+        .filter(DetailInvoice.saleInvoice_id == saleInvoice_id) \
+        .all()
+
+    # Tính tổng tiền
+    total_amount = sum(detail.quantity * detail.price for detail in details)
+
+    return sale_invoice, details, total_amount
+
+
+# thong ke doanh thu theo cate loc theo nam
 def category_revenue_month(year):
     return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
                      .join(DetailInvoice, DetailInvoice.saleInvoice_id.__eq__(SaleInvoice.id))\
@@ -232,10 +255,10 @@ def book_quantity_month(year, month=None):
      .join(Book, Book.id == DetailInvoice.book_id)\
      .filter(extract('year', SaleInvoice.orderDate) == year)\
      .filter(SaleInvoice.paymentStatus == 'Paid')
-    
+
     if month:
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
-        
+
     return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
 
 
@@ -271,7 +294,7 @@ def get_current_regulations():
 def check_import_conditions(book_id):
     regulations = get_current_regulations()
     book = Book.query.get(book_id)
-    
+
     if book.quantity >= regulations.min_stock_before_import:
         return False, f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
 
@@ -289,13 +312,13 @@ def check_min_import_quantity(quantity):
 def check_order_cancellation():
     regulations = get_current_regulations()
     cancel_time = regulations.order_cancel_time
-    
+
     # Tìm các đơn hàng quá hạn
     overdue_orders = SaleInvoice.query.filter(
         SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
         SaleInvoice.paymentStatus == 'Pending'
     ).all()
-    
+
     return overdue_orders
 
 def get_cart_details(sale_invoice_id):

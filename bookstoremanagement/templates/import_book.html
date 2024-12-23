@@ -1,133 +1,292 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Import Books</title>
-  <!-- Bootstrap CSS -->
- <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-        body {
-            background-color: #f8f9fa;
-            overflow-x: hidden; /* Ngăn chặn cuộn ngang */
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Nhập Sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    :root {
+        --primary-color: #343a40;
+        --secondary-color: #495057;
+        --accent-color: #d9d2e9;
+        --hover-color: #5a6268;
+        --text-light: #fff;
+        --sidebar-width: 250px;
+    }
 
-        /* Sidebar styles */
+    body {
+        background-color: #f8f9fa;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--primary-color);
+        color: var(--text-light);
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar a {
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        transform: translateX(5px);
+    }
+
+    .sidebar a.active {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .sidebar i {
+        width: 24px;
+        margin-right: 10px;
+        text-align: center;
+    }
+
+    .content {
+        margin-left: var(--sidebar-width);
+        padding: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .book-entry {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .book-entry .remove-entry {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: #e74c3c;
+        cursor: pointer;
+    }
+
+    .form-select, .form-control {
+        border: 1px solid #dce4ec;
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: var(--hover-color);
+        box-shadow: 0 0 0 0.2rem rgba(90, 98, 104, 0.25);
+    }
+
+    .alert {
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--hover-color);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: #95a5a6;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+        transform: translateY(-1px);
+    }
+
+    .book-counter {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
         .sidebar {
-            position: sticky;
-            top: 0;
-            width: 250px;
-            background-color: #343a40;
-            color: #fff;
-            height: 100vh;
-            overflow-y: auto;
+            transform: translateX(-100%);
         }
-
-        .sidebar a {
-            color: #d9d2e9;
-            text-decoration: none;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center; /* Căn chỉnh icon và text ngang hàng */
+        .sidebar.active {
+            transform: translateX(0);
         }
-
-        .sidebar a i {
-            margin-right: 10px; /* Tạo khoảng cách giữa icon và tiêu đề */
-        }
-
-        .sidebar a:hover {
-            background-color: #575757; /* Hiệu ứng hover khi rê chuột */
-            color: #fff;
-        }
-
-        .sidebar .active {
-            background-color: #343a40;
-            color: #fff;
-        }
-
-        /* Nội dung chính */
         .content {
-            margin-left: 250px;
-            padding: 20px;
+            margin-left: 0;
         }
-
-        .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
+        .sidebar-header h4 {
+            display: none;
         }
-
-        .card-header {
-            background-color: #007bff;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .btn-primary, .btn-success {
-            border-radius: 50px;
-        }
-
-        .table thead {
-            background-color: #f1f1f1;
-        }
-
-        .table th {
-            text-align: center;
-        }
-    </style>
-
+    }
+</style>
 </head>
 <body>
- <!-- Sidebar -->
-  <div class="d-flex">
+    <!-- Sidebar -->
     <div class="sidebar">
-      <h4 class="text-center py-3">Bookstore Panel</h4>
-      <a href="{{ url_for('sale_employee_page')}}" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
+        <div class="sidebar-header">
+            <h4>Bookstore Panel</h4>
+        </div>
+        <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
-      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Import Books</a>
-      <a href=""><i class="fas fa-users me-2"></i>Customers</a>
-      <a href="#"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
-      <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
+      <a href="{{ url_for('import_books')}}"  class="active"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
+      <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
+      <a href="{{ url_for('show_orders')}}"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
     </div>
 
-  <div class="container mt-4">
-    <h2>Nhập Sách Vào Kho</h2>
+    <!-- Main Content -->
+    <div class="content">
+        <div class="container-fluid">
+            <h2 class="mb-4"><i class="fas fa-boxes me-2"></i>Cập nhật Kho sách</h2>
 
-    <!-- Hiển thị thông báo thành công hoặc lỗi -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="alert alert-info">
-          {{ messages[0] }}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" id="importForm">
+                <div id="book-entries">
+                    <div class="book-entry">
+                        <i class="fas fa-times remove-entry" onclick="removeEntry(this)"></i>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Tên Sách</label>
+                                <select name="book_id[]" class="form-select" required>
+                                    <option value="">Chọn sách</option>
+                                    {% for book in books %}
+                                        <option value="{{ book.id }}">{{ book.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Số Lượng</label>
+                                <input type="number" name="quantity[]" class="form-control" min="1" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-secondary" onclick="addBookEntry()">
+                        <i class="fas fa-plus me-2"></i>Thêm Sách
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Lưu Nhập Kho
+                    </button>
+                </div>
+            </form>
         </div>
-      {% endif %}
-    {% endwith %}
+    </div>
 
-    <!-- Form nhập sách vào kho -->
-    <form method="POST">
-      <div class="form-group">
-        <label for="book_id">Chọn Sách:</label>
-        <select name="book_id" id="book_id" class="form-control" required>
-          <option value="">-- Chọn sách --</option>
-          {% for book in books %}
-            <option value="{{ book.id }}">{{ book.name }} - Số lượng tồn: {{ book.quantity }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="book-counter">
+        Số sách đang nhập: <span id="bookCount">1</span>
+    </div>
 
-      <div class="form-group">
-        <label for="quantity">Số lượng nhập:</label>
-        <input type="number" name="quantity" id="quantity" class="form-control" required>
-      </div>
+    <script>
+        function addBookEntry() {
+            const container = document.getElementById('book-entries');
+            const newEntry = container.children[0].cloneNode(true);
+            newEntry.querySelectorAll('input, select').forEach(input => input.value = '');
+            container.appendChild(newEntry);
+            updateBookCount();
+        }
 
-      <button type="submit" class="btn btn-primary">Nhập Kho</button>
-    </form>
-  </div>
+        function removeEntry(element) {
+            const entries = document.getElementsByClassName('book-entry');
+            if (entries.length > 1) {
+                element.closest('.book-entry').remove();
+                updateBookCount();
+            }
+        }
 
-  <!-- Bootstrap JS and dependencies -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        function updateBookCount() {
+            const count = document.getElementsByClassName('book-entry').length;
+            document.getElementById('bookCount').textContent = count;
+        }
+
+        // Form validation
+        document.getElementById('importForm').onsubmit = function(e) {
+            const selects = document.querySelectorAll('select[name="book_id[]"]');
+            const quantities = document.querySelectorAll('input[name="quantity[]"]');
+            let isValid = true;
+            const selectedBooks = new Set();
+
+            selects.forEach((select, index) => {
+                if (select.value === '') {
+                    isValid = false;
+                    select.classList.add('is-invalid');
+                } else {
+                    if (selectedBooks.has(select.value)) {
+                        isValid = false;
+                        alert('Không được chọn trùng sách!');
+                    }
+                    selectedBooks.add(select.value);
+                }
+
+                if (quantities[index].value < 1) {
+                    isValid = false;
+                    quantities[index].classList.add('is-invalid');
+                }
+            });
+
+            return isValid;
+        };
+    </script>
 </body>
 </html>
