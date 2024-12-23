@@ -98,6 +98,11 @@
             color: #155724;
         }
 
+        .status-cancelled {
+            background-color: #FF4545;
+            color: white;
+        }
+
         .confirm-btn {
             background-color: var(--primary-color);
             color: white;
@@ -117,12 +122,11 @@
 <body>
     <div class="sidebar">
         <h4 class="text-center text-white mb-4">Bookstore Panel</h4>
-        <a href="{{ url_for('sale_employee_page')}}"><i class="fas fa-home me-2"></i>Dashboard</a>
-      <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
-      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Import Books</a>
-      <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
-      <a href="{{ url_for('show_orders')}}" class="active"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
+      <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
+      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
+      <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
+      <a href="{{ url_for('show_orders')}}"  class="active"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
     </div>
 
@@ -141,7 +145,11 @@
                                 <p class="mb-1"><strong>Ngày đặt hàng:</strong> {{ sale_invoice.orderDate }}</p>
                                 <p class="mb-1">
                                     <strong>Trạng thái:</strong>
-                                    <span class="status-badge {% if sale_invoice.paymentStatus == 'Pending' %}status-pending{% else %}status-paid{% endif %}">
+                                    <span class="status-badge
+                                    {% if sale_invoice.paymentStatus == 'Pending' %}status-pending
+                                    {% elif sale_invoice.paymentStatus == 'Cancelled' %}status-cancelled
+                                    {%else%} status-paid
+                                    {% endif %}">
                                         {{ sale_invoice.paymentStatus }}
                                     </span>
                                 </p>

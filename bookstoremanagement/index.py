@@ -90,7 +90,7 @@ def user_login_page():
             if user.user_role == UserRole.ADMIN:
                 return redirect('/admin')
             if user.user_role == UserRole.SALE:
-                return render_template('sale_employee.html')
+                return render_template('create_invoice.html')
             # Nếu không phải admin thì chuyển về trang chủ
             return redirect('/')
         else:
@@ -129,7 +129,7 @@ def register_page():
 @login_required
 def sale_employee_page():
     if session.get('user_role') == 'sale':
-        return render_template('sale_employee.html')
+        return render_template('create_invoice.html')
     return redirect(url_for('user_login_page'))
 
 

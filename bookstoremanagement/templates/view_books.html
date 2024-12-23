@@ -238,12 +238,11 @@
     <div class="sidebar" id="sidebar">
       <h4 class="text-center py-4">Bookstore Panel</h4>
       <nav aria-label="Main navigation">
-        <a href="{{ url_for('sale_employee_page')}}"><i class="fas fa-home me-2"></i>Dashboard</a>
+   <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('view_books')}}" class="active"><i class="fas fa-book me-2"></i>Books</a>
-      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Import Books</a>
+      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
       <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
       <a href="{{ url_for('show_orders')}}"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
-      <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
       </nav>
     </div>
@@ -252,7 +251,7 @@
     <main class="main-content" id="main-content">
       <!-- Header --
 
-      <!-- Book List Section -->
+      < !-- Book List Section -->
       <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h2>Book List</h2>
