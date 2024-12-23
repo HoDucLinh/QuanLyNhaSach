@@ -135,14 +135,14 @@ class DetailInvoiceView(AuthModelView):
             form.book_id.data = detail_invoice.book.name
             form.saleInvoice_id.data = f"Hóa đơn {detail_invoice.saleInvoice_id} - {detail_invoice.saleInvoice.orderDate}"
 
-class ReportView(AuthModelView):
-    can_view_details = True
-    form_columns = ['reportDate', 'reportType', 'user_id']
-
-    def on_form_prefill(self, form, id):
-        report = Report.query.get(id)
-        if report:
-            form.user_id.data = report.report.name
+# class ReportView(AuthModelView):
+#     can_view_details = True
+#     form_columns = ['reportDate', 'reportType', 'user_id']
+#
+#     def on_form_prefill(self, form, id):
+#         report = Report.query.get(id)
+#         if report:
+#             form.user_id.data = report.report.name
 
 class LogoutView(BaseView):
     @expose('/')

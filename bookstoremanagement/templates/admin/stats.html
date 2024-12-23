@@ -3,7 +3,7 @@
 
 <!-- Header Section -->
 <div class="container-fluid py-4">
-    <h1 class="custom-title">BOOK HAVEN</h1>
+<!--    <h1 class="custom-title">BOOK HAVEN</h1>-->
 
 <style>
     .custom-title {
@@ -27,6 +27,7 @@
         100% { background-position: 0% 50%; }
     }
 </style>
+
 
     <!-- Category Revenue Section -->
     <div class="card mb-4 shadow-sm">
@@ -104,39 +105,6 @@
         </div>
     </div>
 
-    <!-- Monthly Revenue Section -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">2. Thống kê doanh thu theo tháng</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead class="table-primary">
-                                <tr>
-                                    <th>Tháng</th>
-                                    <th class="text-end">Doanh thu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for s in month_stats %}
-                                <tr>
-                                    <td>Tháng {{ s[0] }}</td>
-                                    <td class="text-end">{{ "{:,.1f}".format(s[1]) }} VND</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <canvas id="CateMonthChartId"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Book Sales Section -->
     <div class="card mb-4 shadow-sm">
@@ -210,6 +178,41 @@
         </div>
     </div>
 </div>
+
+<!-- Monthly Revenue Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">2. Thống kê doanh thu theo tháng</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Tháng</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in month_stats %}
+                                <tr>
+                                    <td>Tháng {{ s[0] }}</td>
+                                    <td class="text-end">{{ "{:,.1f}".format(s[1]) }} VND</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="CateMonthChartId"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
