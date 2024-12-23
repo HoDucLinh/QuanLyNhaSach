@@ -271,7 +271,7 @@ def import_books():
 # Các đơn hàng Online và nhận tại Store
 @app.route('/orders')
 def show_orders():
-    orders = SaleInvoice.query.filter(SaleInvoice.paymentStatus != None).all()
+    orders = SaleInvoice.query.filter(SaleInvoice.sale_id == None).all()
     overdue_orders = dao.check_order_cancellation()
 
     for order in orders:
