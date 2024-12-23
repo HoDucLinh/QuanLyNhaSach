@@ -102,15 +102,14 @@
         <td>{{ loop.index }}</td>
         <td>{{ detail[1] }}</td> <!-- Tên sách -->
         <td class="text-center">{{ detail[3] }}</td> <!-- Số lượng -->
-        <td class="text-end">{{ detail[4]|float|round(2) }}đ</td> <!-- Giá tiền -->
-        <td class="text-end">{{ (detail[3]|int) * (detail[4]|float)|round(2) }}đ</td> <!-- Thành tiền -->
-    </tr>
+        <td class="text-end">{{ "{:,.0f}".format(detail[4]|float|round(2)) }} VNĐ</td> <!-- Giá tiền -->
+         <td class="text-end">{{ "{:,.0f}".format((detail[3]|int) * (detail[4]|float)|round(2)) }} VNĐ</td> <!-- Thành tiền -->
     {% endfor %}
 </tbody>
                 <tfoot class="table-light">
                     <tr>
                         <td colspan="4" class="text-end"><strong>Tổng Tiền:</strong></td>
-                        <td class="text-end"><strong>{{ total_amount }}đ</strong></td>
+                        <td class="text-end"><strong>{{ "{:,.0f}".format(total_amount) }} VNĐ</strong></td>
                     </tr>
                 </tfoot>
             </table>
