@@ -9,21 +9,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-          background-color: #f8f9fa;
+            background-color: #f8f9fa;
         }
         .checkout-header {
-          background-color: #007bff;
-          color: white;
+            background-color: #007bff;
+            color: white;
         }
         .btn-primary {
-          background-color: #007bff;
+            background-color: #007bff;
         }
         .btn-primary:hover {
-          background-color: #0056b3;
+            background-color: #0056b3;
         }
         .form-check-input:checked {
-          background-color: #007bff;
-          border-color: #0056b3;
+            background-color: #007bff;
+            border-color: #0056b3;
+        }
+        #paymentMethod {
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -39,10 +43,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home_page')}}"><i class="fas fa-home"></i> Home</a>
+                    <a class="nav-link" href="{{ url_for('home_page') }}"><i class="fas fa-home"></i> Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('cart_page')}}"><i class="fas fa-shopping-cart"></i> Cart</a>
+                    <a class="nav-link" href="{{ url_for('cart_page') }}"><i class="fas fa-shopping-cart"></i> Cart</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" href="#"><i class="fas fa-credit-card"></i> Checkout</a>
@@ -72,6 +76,7 @@
                     <div class="d-flex justify-content-between">
                         <p><strong>Subtotal:</strong></p>
                         <p>{{ totalAmount }}</p>
+
                     </div>
                     <div class="d-flex justify-content-between">
                         <p><strong>Shipping:</strong></p>
@@ -92,7 +97,8 @@
                     <h5 class="mb-0">Shipping Details</h5>
                 </div>
                 <div class="card-body">
-                    <form>
+                    <form action="/order" method="POST">
+                        <input type="hidden" name="total" id="total" value="{{ totalAmount }}">
                         <!-- Shipping Method -->
                         <div class="mb-4">
                             <h6>Shipping Method</h6>
@@ -104,12 +110,10 @@
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="shippingMethod" id="storePickup"
-                                       value="storePickup">
+                                <input class="form-check-input" type="radio" name="shippingMethod" id="storePickup" value="storePickup">
                                 <label class="form-check-label" for="storePickup">Pick up at Store</label>
                             </div>
                         </div>
-
                         <!-- Delivery Address -->
                         <div id="deliveryAddress">
                             <h6>Delivery Address</h6>
@@ -127,14 +131,31 @@
                                 <input type="text" class="form-control" id="city" placeholder="Enter your city">
                             </div>
                             <div class="mb-3">
-                                <label for="postalCode" class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" id="postalCode"
-                                       placeholder="Enter your postal code">
+                                <label for="phone" class="form-label">Number Phone</label>
+                                <input type="text" class="form-control" id="phone"
+                                       placeholder="Enter your phone">
+                            </div>
+                        </div>
+                        <!-- Payment Method -->
+                        <div id="paymentMethod">
+                            <h6>Payment Method</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="selection" id="payOnline" value="payOnline">
+                                <label class="form-check-label" for="payOnline">
+                                    Pay Online
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="selection" id="payAtStore"
+                                       value="payAtStore">
+                                <label class="form-check-label" for="payAtStore">
+                                    Pay at Store
+                                </label>
                             </div>
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100">Place Order</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-4">Place Order</button>
                     </form>
                 </div>
             </div>
@@ -142,18 +163,21 @@
     </div>
 </div>
 
-<!-- JavaScript to toggle delivery address fields -->
+<!-- JavaScript to toggle delivery address and payment method -->
 <script>
     const homeDeliveryRadio = document.getElementById('homeDelivery');
     const storePickupRadio = document.getElementById('storePickup');
     const deliveryAddress = document.getElementById('deliveryAddress');
+    const paymentMethod = document.getElementById('paymentMethod');
 
     homeDeliveryRadio.addEventListener('change', () => {
-      deliveryAddress.style.display = 'block';
+        deliveryAddress.style.display = 'block'; // Show delivery address
+        paymentMethod.style.display = 'none';   // Hide payment method
     });
 
     storePickupRadio.addEventListener('change', () => {
-      deliveryAddress.style.display = 'none';
+        deliveryAddress.style.display = 'none'; // Hide delivery address
+        paymentMethod.style.display = 'block';  // Show payment method
     });
 </script>
 

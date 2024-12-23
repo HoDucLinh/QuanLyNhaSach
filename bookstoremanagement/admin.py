@@ -1,6 +1,7 @@
 from calendar import month
 from flask_admin import Admin, AdminIndexView, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
+from bookstoremanagement import app, db
 from bookstoremanagement.models import *
 from flask_login import current_user, logout_user
 from flask import redirect, url_for
@@ -46,7 +47,6 @@ class UserView(AuthModelView):
             model.password = str(hashlib.md5(form.password.data.strip().encode('utf-8')).hexdigest())
         # Lấy role từ form
         model.user_role = UserRole(form.user_role.data)
-
 
 class CategoryView(AuthModelView):
     can_view_details = True
@@ -104,8 +104,6 @@ class BookView(AuthModelView):
         form.category_id.choices = self.get_category_choices()
         return form
 
-
-
 class SaleInvoiceView(AuthModelView):
     can_view_details = True
     form_columns = ['paymentStatus', 'customer_id', 'sale_id', 'orderDate']
@@ -126,14 +124,6 @@ class DetailInvoiceView(AuthModelView):
             form.book_id.data = detail_invoice.book.name
             form.saleInvoice_id.data = f"Hóa đơn {detail_invoice.saleInvoice_id} - {detail_invoice.saleInvoice.orderDate}"
 
-class ReportView(AuthModelView):
-    can_view_details = True
-    form_columns = ['reportDate', 'reportType', 'user_id']
-
-    def on_form_prefill(self, form, id):
-        report = Report.query.get(id)
-        if report:
-            form.user_id.data = report.report.name
 
 class LogoutView(BaseView):
     @expose('/')
@@ -191,8 +181,12 @@ class RegulationView(AuthModelView):
 admin.add_view(UserView(User, db.session, name='Users'))
 admin.add_view(BookView(Book, db.session, name='Books'))
 admin.add_view(CategoryView(Category, db.session, name='Categories'))
-admin.add_view(StockView(Stock, db.session, name='Stocks'))
-admin.add_view(ReportView(Report, db.session, name='Reports'))
-admin.add_view((StatsView(name='Thống kê báo cáo')))
-admin.add_view((LogoutView(name='Đăng xuất')))
-admin.add_view(RegulationView(Regulation, db.session, name='Quy định'))
+# admin.add_view(StockView(Stock, db.session, name='Stocks'))
+# admin.add_view(AuthModelView(Cart, db.session, name='Carts'))
+# # admin.add_view(AuthModelView(CartDetail, db.session, name='Cart Details'))
+# admin.add_view(SaleInvoiceView(SaleInvoice, db.session, name='Sale Invoices'))
+# admin.add_view(DetailInvoiceView(DetailInvoice, db.session, name='Invoice Details'))
+# admin.add_view(ReportView(Report, db.session, name='Reports'))
+admin.add_view((StatsView(name='Revenue')))
+admin.add_view((LogoutView(name='Log out')))
+admin.add_view(RegulationView(Regulation, db.session, name='Rules'))

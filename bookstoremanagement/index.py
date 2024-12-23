@@ -1,19 +1,14 @@
-import json
 import math
-from calendar import error
-
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
-from pyexpat.errors import messages
 from sqlalchemy import func
-
-from bookstoremanagement import app, dao, db , login
+from bookstoremanagement import app, dao, db, login
+from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
-
-from bookstoremanagement.dao import check_import_conditions, check_min_import_quantity
 from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
+
 
 @app.route('/')
 def home_page():
@@ -23,7 +18,7 @@ def home_page():
     if q:
         books = dao.load_books(kw=q)
         flag = 1
-    return render_template('index.html' , books = books , flag =flag)
+    return render_template('index.html', books=books, flag=flag)
 
 
 @app.route('/popular')
@@ -33,8 +28,8 @@ def popular_page():
         Favorite.book_id,
         func.count(Favorite.book_id).label('favorite_count')
     ).group_by(Favorite.book_id) \
-     .order_by(func.count(Favorite.book_id).desc()) \
-     .limit(4).all()
+        .order_by(func.count(Favorite.book_id).desc()) \
+        .limit(4).all()
 
     # Now, fetch the book details based on the popular books
     books = []
@@ -76,7 +71,8 @@ def our_store_page():
         pages=pages
     )
 
-@app.route('/login',methods=['get','post'])
+
+@app.route('/login', methods=['get', 'post'])
 def user_login_page():
     err_msg = None
     if request.method == 'POST':
@@ -90,19 +86,20 @@ def user_login_page():
             if user.user_role == UserRole.ADMIN:
                 return redirect('/admin')
             if user.user_role == UserRole.SALE:
-                return render_template('create_invoice.html')
+                return redirect('/create-invoice')
             # Nếu không phải admin thì chuyển về trang chủ
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
-    return render_template('login.html', err_msg = err_msg)
+    return render_template('login.html', err_msg=err_msg)
+
 
 @login.user_loader
 def load_user(user_id):
     return dao.load_user_by_id(user_id)
 
 
-@app.route('/register' , methods = ['GET','POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register_page():
     msg = None
     if request.method.__eq__('POST'):
@@ -117,16 +114,16 @@ def register_page():
             if avatar:
                 res = cloudinary.uploader.upload(avatar)
                 avatar_path = res['secure_url']
-            dao.add_user(name , username, password, avatar_path, email)
-            return  redirect('/login')
+            dao.add_user(name, username, password, avatar_path, email)
+            return redirect('/login')
         else:
             msg = "Xac nhan mat khau chua dung"
-    return render_template("register.html" , err_msg = msg)
+    return render_template("register.html", err_msg=msg)
 
 
 # Sale Employee
 @app.route('/sale-employee')
-@login_required
+# @login_required()
 def sale_employee_page():
     if session.get('user_role') == 'sale':
         return render_template('create_invoice.html')
@@ -134,9 +131,8 @@ def sale_employee_page():
 
 
 # Quản lý sách
-@app.route('/view-books', methods = ['GET'])
+@app.route('/view-books', methods=['GET'])
 def view_books():
-
     #Load toàn bộ danh mục và sách
     books = dao.load_books()
     categories = dao.load_categories()
@@ -146,7 +142,7 @@ def view_books():
 
     # Lấy giá trị từ tham số
     category_id = request.args.get('category_id', type=int)
-    search_book = request.args.get('search_book','')
+    search_book = request.args.get('search_book', '')
 
     # Lọc sách theo thể loại
     if category_id:
@@ -161,13 +157,16 @@ def view_books():
     if search_book:
         books = [book for book in books if search_book.lower() in book.name.lower()]
 
-    return render_template('view_books.html', books=books, categories=categories, selected_category_name=selected_category_name)
+    return render_template('view_books.html', books=books, categories=categories,
+                           selected_category_name=selected_category_name)
+
 
 # Tạo hóa đơn
 @app.route('/create-invoice', methods=['GET', 'POST'])
 def create_invoice():
+    books = []
     books = dao.load_books()
-
+    print(books)
     if request.method == 'POST':
         customer_name = request.form.get('customer_name')  # Lấy tên khách hàng từ form
         order_date = request.form.get('orderDate')  # Lấy ngày đặt hàng từ form
@@ -204,16 +203,19 @@ def create_invoice():
         db.session.commit()
         flash('Tạo hóa đơn thành công', 'success')
         return redirect(url_for('view_invoice', saleInvoice_id=invoice.id))
-    return render_template('create_invoice.html', books=books)
+    return render_template("create_invoice.html", books=books)
 
-@app.route('/invoice/view/<int:saleInvoice_id>',methods = ['GET'])
+
+# Danh sách các hóa đơn
+@app.route('/invoice/view/<int:saleInvoice_id>', methods=['GET'])
 @login_required
 def view_invoice(saleInvoice_id):
-    sale_invoice, details, total_amount= dao.view_invoice(saleInvoice_id)
+    sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
 
     # Trả về kết quả cho view (template)
     return render_template('view_invoice.html', saleInvoice_id=saleInvoice_id, sale_invoice=sale_invoice,
                            details=details, total_amount=total_amount)
+
 
 # Nhập sách vào kho
 @app.route('/import-book', methods=['GET', 'POST'])
@@ -228,12 +230,12 @@ def import_books():
                 quantity = int(quantity)
 
                 # Kiểm tra điều kiện nhập hàng
-                is_valid, message = check_import_conditions(book_id)
+                is_valid, message = dao.check_import_conditions(book_id)
                 if not is_valid:
                     flash(message, 'danger')
                     continue
 
-                is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity)
+                is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity)
                 if not is_valid_min_quantity:
                     flash(message_min_quantity, 'danger')
                     continue
@@ -265,10 +267,11 @@ def import_books():
     books = dao.load_books()
     return render_template('import_book.html', books=books)
 
+
 # Các đơn hàng Online và nhận tại Store
 @app.route('/orders')
 def show_orders():
-    orders = SaleInvoice.query.filter(SaleInvoice.paymentStatus != None).all()
+    orders = SaleInvoice.query.filter(SaleInvoice.sale_id == None).all()
     overdue_orders = dao.check_order_cancellation()
 
     for order in orders:
@@ -276,7 +279,6 @@ def show_orders():
             order.paymentStatus = 'Cancelled'
 
     db.session.commit()
-
     return render_template('orders.html', orders=orders)
 
 
@@ -300,23 +302,32 @@ def order_detail(saleInvoice_id):
     return render_template('order_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
 
 
-
-@app.route('/customers', methods = ['GET'])
+@app.route('/customers', methods=['GET'])
 def customers():
-    orders = SaleInvoice.query.filter(SaleInvoice.customer_id==None).all()
+    orders = SaleInvoice.query.filter(SaleInvoice.customer_id == None).all()
     return render_template('customers.html', orders=orders)
 
-@app.route('/customers_detail/<int:saleInvoice_id>', methods = ['GET'])
+
+@app.route('/customers_detail/<int:saleInvoice_id>', methods=['GET'])
 def customer_detail(saleInvoice_id):
-    sale_invoice, details,total_amount = dao.view_invoice(saleInvoice_id)
-    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
+    sale_invoice = SaleInvoice.query.get(saleInvoice_id)
+    details = db.session.query(
+        Book.name,
+        DetailInvoice.quantity,
+        (DetailInvoice.quantity * Book.price).label('total_price')
+    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
+        .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
+    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details)
+    sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
+    return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details,
+                           total_amount=total_amount)
 
 
-@app.route('/payment' , methods=['POST'])
+@app.route('/payment', methods=['POST'])
 def payment_page():
     totalAmount = 0
-    cart_id = Cart.query.filter_by(user_id=current_user.id).first()
-    cart_details = CartDetail.query.filter_by(cart_id=cart_id.id).all()  # Ensure you're querying by cart_id
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()  # Ensure you're querying by cart_id
     books = []  # Will hold full book objects
 
     for b in cart_details:
@@ -331,13 +342,20 @@ def payment_page():
     return render_template('payment.html', books=books, totalAmount=totalAmount)
 
 
-
 @app.route('/account')
 @login_required
 def account_page():
     invoices = dao.load_invoice(current_user.id)  # Lấy hóa đơn cho user hiện tại
-    favorites = dao.load_favorite(current_user.id) #lấy danh sách sách yêu thích của người dùng
-    return render_template('accountcustomer.html', invoices=invoices , favorites= favorites)
+    favorites = dao.load_favorite(current_user.id)  # Lấy danh sách sách yêu thích của người dùng
+    invoice_details = {}  # Sử dụng dictionary để chứa chi tiết hóa đơn
+
+    # Lấy chi tiết hóa đơn cho mỗi hóa đơn
+    for invoice in invoices:
+        details = dao.load_invoice_details(invoice.id)  # Truy vấn chi tiết hóa đơn
+        invoice_details[invoice.id] = details  # Lưu chi tiết hóa đơn vào dictionary theo ID của hóa đơn
+
+    return render_template('accountcustomer.html', invoices=invoices, favorites=favorites,
+                           invoice_details=invoice_details)
 
 
 @app.route('/cart')
@@ -367,7 +385,7 @@ def cart_page():
                 })
         for b in books_in_cart:
             total_price += b['total']
-    else :
+    else:
         return redirect('/login')
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
@@ -380,10 +398,10 @@ def add_to_cart():
 
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
-        dao.insert_book_to_cart(user_id , book_id)
-        return jsonify({'message': 'Added to cart successfully'}), 200
+        dao.insert_book_to_cart(user_id, book_id)
+        return {'status': 'success', 'message': 'Thêm vào giỏ hàng thành công!'}
 
-    return jsonify({'error': 'Bạn phải đăng nhập'}), 401
+    return {'status': 'error', 'message': 'Bạn cần đăng nhập để thêm sách vào giỏ hàng.'}, 401
 
 
 @app.route('/remove_from_cart', methods=['POST'])
@@ -418,16 +436,9 @@ def delete_from_favorite():
 
     # Truy vấn favorite của người dùng và tìm sản phẩm yêu thích theo book_id
     favorite_detail = Favorite.query.filter_by(customer_id=user_id, book_id=book_id).first()
-
-    if not favorite_detail:
-        flash('Product not found in your favorites.', 'danger')
-        return redirect('/account')  # Nếu không có sản phẩm yêu thích, quay lại trang tài khoản
-
     # Xóa sản phẩm khỏi danh sách yêu thích
     db.session.delete(favorite_detail)
     db.session.commit()
-
-    flash('Product removed from your favorites.', 'success')
     return redirect('/account')  # Quay lại trang tài khoản sau khi xóa
 
 
@@ -448,7 +459,6 @@ def update_quantity():
     if cart_detail:
         cart_detail.quantity = new_quantity
         db.session.commit()
-        flash('Cập nhật số lượng thành công!', 'success')
     # Redirect về trang giỏ hàng
     return redirect('/cart')
 
@@ -488,7 +498,7 @@ def edit_profile():
                 updated = True
             else:
                 err_msg = "Mat khau khong dung!!!"
-                return render_template('editprofile.html' , msg = err_msg)
+                return render_template('editprofile.html', msg=err_msg)
         if avatar:
             res = cloudinary.uploader.upload(avatar)
             avatar_path = res['secure_url']
@@ -500,10 +510,11 @@ def edit_profile():
             err_msg = "Cap nhat thanh cong"
 
     # Phương thức GET: hiển thị form
-    return render_template('editprofile.html' , msg = err_msg)
+    return render_template('editprofile.html', msg=err_msg)
 
 
 @app.route('/toggle_favorite', methods=['POST'])
+@login_required
 def toggle_favorite():
     data = request.get_json()
     book_id = data['book_id']
@@ -531,6 +542,7 @@ def toggle_favorite():
 
     return jsonify({'success': False, 'message': 'Invalid action'})
 
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
@@ -550,7 +562,121 @@ def admin_login():
 
     return render_template('login.html')
 
+
+@app.route("/order", methods=["POST"])
+def order():
+    if request.method == 'POST':
+        if request.form.get('shippingMethod') == 'storePickup' and request.form.get('selection') == 'payAtStore':
+            user_id = current_user.id
+            # Lấy giỏ hàng của người dùng
+            cart = Cart.query.filter_by(user_id=user_id).first()
+            # Lấy chi tiết giỏ hàng
+            cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+            sale_invoice = SaleInvoice(
+                paymentStatus="Pending",
+                customer_name=current_user.name,
+                customer_id=user_id,
+                orderDate=datetime.utcnow()
+            )
+            db.session.add(sale_invoice)
+            db.session.commit()  # Lưu SaleInvoice để có ID
+            # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
+            for detail in cart_details:
+                detail_invoice = DetailInvoice(
+                    book_id=detail.book_id,
+                    saleInvoice_id=sale_invoice.id,
+                    quantity=detail.quantity
+                )
+                db.session.add(detail_invoice)
+            CartDetail.query.filter_by(cart_id=cart.id).delete()
+            db.session.delete(cart)
+            db.session.commit()
+            return redirect("account")
+        total = request.form.get('total')
+        amount = round(float(total))
+
+        # Tạo một instance của ZaloPayDAO
+        zalopay_dao = dao.ZaloPayDAO()
+
+        # Tạo đơn hàng và lấy URL thanh toán
+        pay_url = zalopay_dao.create_order(amount)
+
+        if "Error" not in pay_url:
+            return redirect(pay_url)  # Chuyển hướng đến ZaloPay thanh toán
+        else:
+            return pay_url  # Trả về thông báo lỗi nếu có
+
+
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    status = request.args.get("status")
+    if status == "1":
+        user_id = current_user.id
+        # Lấy giỏ hàng của người dùng
+        cart = Cart.query.filter_by(user_id=user_id).first()
+        # Lấy chi tiết giỏ hàng
+        cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
+
+        sale_invoice = SaleInvoice(
+            paymentStatus="Paid",
+            customer_name=current_user.name,
+            customer_id=user_id,
+            orderDate=datetime.utcnow()
+        )
+        db.session.add(sale_invoice)
+        db.session.commit()  # Lưu SaleInvoice để có ID
+
+        # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
+        for detail in cart_details:
+            detail_invoice = DetailInvoice(
+                book_id=detail.book_id,
+                saleInvoice_id=sale_invoice.id,
+                quantity=detail.quantity
+            )
+            db.session.add(detail_invoice)
+            dao.updateQuantityBook(book_id=detail_invoice.book_id, quantity=detail_invoice.quantity)
+        CartDetail.query.filter_by(cart_id=cart.id).delete()
+        db.session.delete(cart)
+        db.session.commit()
+        return redirect("account")
+    else:
+        return "Thanh toan khong thanh cong!!!"
+
+
+@app.route('/book_revenue-report')
+@login_required
+def revenue_report():
+    year = request.args.get('year', datetime.now().year)
+    month = request.args.get('month')
+
+    if month:
+        month = int(month)
+
+    book_stats = dao.book_quantity_month(year=year, month=month)
+
+    return render_template('book_revenue_report.html',
+                           book_stats=book_stats,
+                           year=year,
+                           month=month)
+
+
+@app.route('/category-revenue-report')
+@login_required
+def category_revenue_report():
+    kw = request.args.get('kw')
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+
+    stats = dao.category_revenue_detail(kw=kw, from_date=from_date, to_date=to_date)
+
+    return render_template('category_revenue_report.html',
+                           stats=stats,
+                           from_date=from_date,
+                           to_date=to_date)
+
+
 if __name__ == '__main__':
     from bookstoremanagement.admin import *
+
     init_scheduler()
     app.run(debug=True)
