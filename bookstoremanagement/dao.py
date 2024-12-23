@@ -88,7 +88,6 @@ def load_books(book_id=None,cate_id=None, kw=None , page = None):
 
     return query.all()
 
-
 def load_categories():
     return Category.query.all()
 
@@ -103,7 +102,6 @@ def count_books(cate_id=None):
 def load_product_by_id(id):
     book = Book.query.filter_by(id=id).first()
     return book
-
 
 def insert_book_to_cart(user_id , book_id ):
     # Kiểm tra xem người dùng đã có giỏ hàng chưa
@@ -143,10 +141,10 @@ def add_user(name , username , password , avatar , email ):
 
 
 def auth_user(username, password):
-
-    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
-
-    return User.query.filter(User.username.__eq__(username),User.password.__eq__(password)).first()
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    
+    return User.query.filter(User.username.__eq__(username.strip()),
+                           User.password.__eq__(password)).first()
 
 
 def load_user_by_id(user_id):
@@ -217,7 +215,7 @@ def category_revenue_stats(kw=None, from_date=None, to_date=None):
 
     return p.all()
 
-# thong ke doanh thu theo cate loc theo nam
+# thong ke doanh thu theo cate loc theo nam (toàn bộ)
 def category_revenue_month(year):
     return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
                      .join(DetailInvoice, DetailInvoice.saleInvoice_id.__eq__(SaleInvoice.id))\
@@ -225,7 +223,6 @@ def category_revenue_month(year):
                      .filter(extract('year', SaleInvoice.orderDate) == year)\
                      .filter(SaleInvoice.paymentStatus == 'Paid')\
                      .group_by(extract('month', SaleInvoice.orderDate)).all()
-
 
 # thong ke doanh thu theo cate loc theo tháng + nam
 def book_quantity_month(year, month=None):
@@ -237,11 +234,36 @@ def book_quantity_month(year, month=None):
      .join(Book, Book.id == DetailInvoice.book_id)\
      .filter(extract('year', SaleInvoice.orderDate) == year)\
      .filter(SaleInvoice.paymentStatus == 'Paid')
-
+    
     if month:
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
-
+        
     return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
+
+
+# Hàm in cho thống kê cho loại 1
+def category_revenue_detail(kw=None, from_date=None, to_date=None):
+    query = (db.session.query(
+        Category.name.label('category_name'),
+        Book.name.label('book_name'),
+        func.sum(DetailInvoice.quantity * Book.price).label('revenue'),
+        func.sum(DetailInvoice.quantity).label('quantity')
+    ).join(Book, Category.id == Book.category_id)
+     .join(DetailInvoice, DetailInvoice.book_id == Book.id)
+     .join(SaleInvoice, SaleInvoice.id == DetailInvoice.saleInvoice_id)
+     .filter(SaleInvoice.paymentStatus == 'Paid')
+     .group_by(Category.name, Book.name))
+
+    if kw:
+        query = query.filter(Category.name.contains(kw))
+
+    if from_date:
+        query = query.filter(SaleInvoice.orderDate >= from_date)
+
+    if to_date:
+        query = query.filter(SaleInvoice.orderDate <= to_date)
+
+    return query.all()
 
 # ========================= KIỂM TRA QUY ĐỊNH
 def get_current_regulations():
@@ -251,7 +273,7 @@ def get_current_regulations():
 def check_import_conditions(book_id):
     regulations = get_current_regulations()
     book = Book.query.get(book_id)
-
+    
     if book.quantity >= regulations.min_stock_before_import:
         return False, f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
 
@@ -269,13 +291,13 @@ def check_min_import_quantity(quantity):
 def check_order_cancellation():
     regulations = get_current_regulations()
     cancel_time = regulations.order_cancel_time
-
+    
     # Tìm các đơn hàng quá hạn
     overdue_orders = SaleInvoice.query.filter(
         SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
         SaleInvoice.paymentStatus == 'Pending'
     ).all()
-
+    
     return overdue_orders
 
 def get_cart_details(sale_invoice_id):

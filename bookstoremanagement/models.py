@@ -14,31 +14,29 @@ class UserRole(PyEnum):
     ADMIN = 1
     SALE = 2
     USER = 3
-
+    
     @classmethod
     def choices(cls):
         return [(choice.value, choice.name) for choice in cls]
 
 
-class User(db.Model, UserMixin):
+class User(db.Model , UserMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
-    avatar = db.Column(db.String(2083),
-                       default="https://res.cloudinary.com/dzwsdpjgi/image/upload/v1733196994/default-avatar-profile-icon-vector-social-media-user-photo-700-205577532_tfbwxm.jpg")
-    email = db.Column(db.String(200), nullable=True)
+    avatar = db.Column(db.String(2083), default="https://res.cloudinary.com/dzwsdpjgi/image/upload/v1733196994/default-avatar-profile-icon-vector-social-media-user-photo-700-205577532_tfbwxm.jpg")
+    email = db.Column(db.String(200) , nullable=True)
     user_role = db.Column(SQLEnum(UserRole), default=UserRole.USER)
     # 1 nhân viên sale có thể tạo nhiều hóa đơn bán hàng
-    sale_invoices = relationship('SaleInvoice', backref='sale_user', lazy=True, foreign_keys='SaleInvoice.sale_id')
+    sale_invoices = relationship('SaleInvoice', backref='sale_user', lazy=True,foreign_keys='SaleInvoice.sale_id')
     # 1 khách hàng có thể có nhiều hóa đơn
-    customer_invoices = relationship('SaleInvoice', backref='customer', lazy=True,
-                                     foreign_keys='SaleInvoice.customer_id')
+    customer_invoices = relationship('SaleInvoice', backref='customer', lazy=True,foreign_keys='SaleInvoice.customer_id')
     # 1 admin có thể tạo nhiều report
     # reports = relationship('Report', backref='report', lazy=True)
     # 1 nhân viên có the tạo nhiều hóa đơn nhập kho
-    stock_invoices = relationship('StockInvoice', backref='stockInvoice', lazy=True)
-    # 1 customer có thể có nhiều sách yêu thích
+    stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
+    #1 customer có thể có nhiều sách yêu thích
     favorites = relationship('Favorite', backref='customer', lazy=True)
 
     def __str__(self):
@@ -57,7 +55,7 @@ class User(db.Model, UserMixin):
 
 
 class StockInvoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     createdDate = db.Column(db.Date)
     totalAmount = db.Column(db.Float)
     totalQuantity = db.Column(db.Integer)
@@ -70,8 +68,8 @@ class StockInvoice(db.Model):
 
 
 class Book(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
+    name = db.Column(db.String(100) ,nullable=False)
     price = db.Column(db.Float)
     publisherName = db.Column(db.String(100))
     image = db.Column(db.String(200), nullable=True)
@@ -85,8 +83,8 @@ class Book(db.Model):
 
 
 class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
+    name = db.Column(db.String(100),nullable=False)
     stock_id = db.Column(Integer, ForeignKey('stock.id'), nullable=False)
     books = relationship(Book, backref='category', lazy=True)
 
@@ -95,9 +93,9 @@ class Category(db.Model):
 
 
 class Stock(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     name = db.Column(db.String(100), nullable=False)  # Thêm cột name
-    categories = relationship('Category', backref='stock', lazy=True)
+    categories = relationship('Category' ,backref='stock', lazy=True)
 
     def __str__(self):
         return self.name
@@ -125,7 +123,7 @@ class CartDetail(db.Model):
 
 
 class SaleInvoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True ,autoincrement=True)
     paymentStatus = db.Column(db.String(100))
     # nếu mua onl thì lấy tên thông qua customer_id , nếu mua off thì điền thẳng tên
     customer_name = db.Column(db.String(100), nullable=False)
@@ -145,7 +143,6 @@ class DetailInvoice(db.Model):
     saleInvoice_id = db.Column(Integer, ForeignKey(SaleInvoice.id), nullable=False)
     quantity = db.Column(db.Integer)
 
-
     def __str__(self):
         return f"DetailInvoice {self.id}, Book ID {self.book_id}, Quantity {self.quantity}"
 
@@ -158,7 +155,7 @@ class Favorite(db.Model):
 class Regulation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
-    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn tối thiểu trước khi nhập
+    min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn kho tối thiểu trước khi nhập
     order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
     updated_date = db.Column(db.DateTime, default=datetime.now())
     updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)
@@ -197,7 +194,7 @@ if __name__ == "__main__":
         sale = User(name='Sal12', username='Sale12', password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
                     user_role=UserRole.SALE)
         # Thêm đối tượng vào cơ sở dữ liệu
-        db.session.add_all([new_user1, new_user2, admin_user,sale])
+        db.session.add_all([new_user1,new_user2,admin_user])
         db.session.commit()
 
         sale_invoices = [
@@ -223,4 +220,15 @@ if __name__ == "__main__":
             Favorite(book_id=5, customer_id=2),
         ]
         db.session.add_all(favorites)
+        db.session.commit()
+
+        sample_regulation = Regulation(
+            min_import_quantity=150,
+            min_stock_before_import=300,
+            order_cancel_time=48,
+            updated_date=datetime.now(),
+            updated_by=3
+        )
+
+        db.session.add(sample_regulation)
         db.session.commit()

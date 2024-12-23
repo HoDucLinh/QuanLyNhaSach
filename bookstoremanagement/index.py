@@ -2,17 +2,13 @@ import math
 
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
-
-from bookstoremanagement import app, dao, db, login
+from bookstoremanagement import app, dao, db , login
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
-
-from bookstoremanagement.dao import check_import_conditions, check_min_import_quantity
 from bookstoremanagement.tasks import init_scheduler
 
 app.secret_key = "123456"
-
 
 @app.route('/')
 def home_page():
@@ -22,7 +18,7 @@ def home_page():
     if q:
         books = dao.load_books(kw=q)
         flag = 1
-    return render_template('index.html', books=books, flag=flag)
+    return render_template('index.html' , books = books , flag =flag)
 
 
 @app.route('/popular')
@@ -76,7 +72,7 @@ def our_store_page():
     )
 
 
-@app.route('/login', methods=['get', 'post'])
+@app.route('/login',methods=['get','post'])
 def user_login_page():
     err_msg = None
     if request.method == 'POST':
@@ -95,7 +91,7 @@ def user_login_page():
             return redirect('/')
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
-    return render_template('login.html', err_msg=err_msg)
+    return render_template('login.html', err_msg = err_msg)
 
 
 @login.user_loader
@@ -103,7 +99,7 @@ def load_user(user_id):
     return dao.load_user_by_id(user_id)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register' , methods = ['GET','POST'])
 def register_page():
     msg = None
     if request.method.__eq__('POST'):
@@ -118,16 +114,16 @@ def register_page():
             if avatar:
                 res = cloudinary.uploader.upload(avatar)
                 avatar_path = res['secure_url']
-            dao.add_user(name, username, password, avatar_path, email)
-            return redirect('/login')
+            dao.add_user(name , username, password, avatar_path, email)
+            return  redirect('/login')
         else:
             msg = "Xac nhan mat khau chua dung"
-    return render_template("register.html", err_msg=msg)
+    return render_template("register.html" , err_msg = msg)
 
 
 # Sale Employee
 @app.route('/sale-employee')
-@login_required
+# @login_required()
 def sale_employee_page():
     if session.get('user_role') == 'sale':
         return render_template('sale_employee.html')
@@ -222,13 +218,13 @@ def import_books():
         quantity_to_import = int(request.form.get('quantity'))
 
         # Kiểm tra điều kiện nhập hàng
-        is_valid, message = check_import_conditions(book_id)
+        is_valid, message = dao.check_import_conditions(book_id)
 
         if not is_valid:
             flash(message, 'danger')
             return redirect(url_for('import_books'))
 
-        is_valid_min_quantity, message_min_quantity = check_min_import_quantity(quantity_to_import)
+        is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity_to_import)
         if not is_valid_min_quantity:
             flash(message_min_quantity, 'danger')
             return redirect(url_for('import_books'))
@@ -431,7 +427,6 @@ def cart_page():
         return redirect('/login')
 
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
-
 
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
@@ -686,9 +681,38 @@ def callback():
         return "Thanh toan khong thanh cong!!!"
 
 
+
+@app.route('/book_revenue-report')
+@login_required
+def revenue_report():
+    year = request.args.get('year', datetime.now().year)
+    month = request.args.get('month')
+
+    if month:
+        month = int(month)
+
+    book_stats = dao.book_quantity_month(year=year, month=month)
+
+    return render_template('book_revenue_report.html',
+                           book_stats=book_stats,
+                           year=year,
+                           month=month)
+
+@app.route('/category-revenue-report')
+@login_required
+def category_revenue_report():
+    kw = request.args.get('kw')
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+
+    stats = dao.category_revenue_detail(kw=kw, from_date=from_date, to_date=to_date)
+
+    return render_template('category_revenue_report.html',
+                           stats=stats,
+                           from_date=from_date,
+                           to_date=to_date)
+
 if __name__ == '__main__':
     from bookstoremanagement.admin import *
-
     init_scheduler()
-
     app.run(debug=True)

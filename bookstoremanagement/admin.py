@@ -135,14 +135,14 @@ class DetailInvoiceView(AuthModelView):
             form.book_id.data = detail_invoice.book.name
             form.saleInvoice_id.data = f"Hóa đơn {detail_invoice.saleInvoice_id} - {detail_invoice.saleInvoice.orderDate}"
 
-# class ReportView(AuthModelView):
-#     can_view_details = True
-#     form_columns = ['reportDate', 'reportType', 'user_id']
-#
-#     def on_form_prefill(self, form, id):
-#         report = Report.query.get(id)
-#         if report:
-#             form.user_id.data = report.report.name
+class ReportView(AuthModelView):
+    can_view_details = True
+    form_columns = ['reportDate', 'reportType', 'user_id']
+
+    def on_form_prefill(self, form, id):
+        report = Report.query.get(id)
+        if report:
+            form.user_id.data = report.report.name
 
 class LogoutView(BaseView):
     @expose('/')
@@ -200,12 +200,12 @@ class RegulationView(AuthModelView):
 admin.add_view(UserView(User, db.session, name='Users'))
 admin.add_view(BookView(Book, db.session, name='Books'))
 admin.add_view(CategoryView(Category, db.session, name='Categories'))
-admin.add_view(StockView(Stock, db.session, name='Stocks'))
+# admin.add_view(StockView(Stock, db.session, name='Stocks'))
 # admin.add_view(AuthModelView(Cart, db.session, name='Carts'))
-# admin.add_view(AuthModelView(CartDetail, db.session, name='Cart Details'))
+# # admin.add_view(AuthModelView(CartDetail, db.session, name='Cart Details'))
 # admin.add_view(SaleInvoiceView(SaleInvoice, db.session, name='Sale Invoices'))
 # admin.add_view(DetailInvoiceView(DetailInvoice, db.session, name='Invoice Details'))
 # admin.add_view(ReportView(Report, db.session, name='Reports'))
-admin.add_view((StatsView(name='Thống kê báo cáo')))
-admin.add_view((LogoutView(name='Đăng xuất')))
-admin.add_view(RegulationView(Regulation, db.session, name='Quy định'))
+admin.add_view((StatsView(name='Revenue')))
+admin.add_view((LogoutView(name='Log out')))
+admin.add_view(RegulationView(Regulation, db.session, name='Rules'))
