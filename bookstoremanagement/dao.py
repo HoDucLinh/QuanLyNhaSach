@@ -238,28 +238,32 @@ def view_invoice(saleInvoice_id):
 
 # thong ke doanh thu theo cate loc theo nam
 def category_revenue_month(year):
-    return db.session.query(extract('month', SaleInvoice.orderDate), func.sum(DetailInvoice.quantity * Book.price))\
+    return db.session.query(extract('month', SaleInvoice.orderDate),
+                          func.sum(DetailInvoice.quantity * Book.price))\
                      .join(DetailInvoice, DetailInvoice.saleInvoice_id.__eq__(SaleInvoice.id))\
                      .join(Book, DetailInvoice.book_id == Book.id)\
                      .filter(extract('year', SaleInvoice.orderDate) == year)\
                      .filter(SaleInvoice.paymentStatus == 'Paid')\
-                     .group_by(extract('month', SaleInvoice.orderDate)).all()
+                     .group_by(extract('month', SaleInvoice.orderDate))\
+                     .order_by(extract('month', SaleInvoice.orderDate)).all()  # Thêm order_by
 
 # thong ke doanh thu theo cate loc theo tháng + nam
 def book_quantity_month(year, month=None):
     query = db.session.query(
         extract('month', SaleInvoice.orderDate),
         Book.name,
-        func.sum(DetailInvoice.quantity)
+        Category.name.label('ten_the_loai'),  # Thêm dòng này
+        func.sum(DetailInvoice.quantity).label('so_luong')
     ).join(DetailInvoice, DetailInvoice.saleInvoice_id == SaleInvoice.id)\
      .join(Book, Book.id == DetailInvoice.book_id)\
+     .join(Category, Category.id == Book.category_id)\
      .filter(extract('year', SaleInvoice.orderDate) == year)\
      .filter(SaleInvoice.paymentStatus == 'Paid')
 
     if month:
         query = query.filter(extract('month', SaleInvoice.orderDate) == month)
 
-    return query.group_by(extract('month', SaleInvoice.orderDate), Book.name).all()
+    return query.group_by(extract('month', SaleInvoice.orderDate), Book.name, Category.name).all()  # Thêm Category.name
 
 
 # Hàm in cho thống kê cho loại 1

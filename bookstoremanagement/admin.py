@@ -9,7 +9,9 @@ from wtforms import SelectField, PasswordField, validators
 import dao
 from flask import request
 from datetime import datetime
-
+import requests
+import cloudinary
+from io import BytesIO
 
 # Base ModelView với kiểm tra quyền
 class AuthModelView(ModelView):
@@ -103,6 +105,22 @@ class BookView(AuthModelView):
         form = super(BookView, self).edit_form(obj)
         form.category_id.choices = self.get_category_choices()
         return form
+
+    #update lên cloudinary
+    def on_model_change(self, form, model, is_created):
+        if form.image.data:
+            try:
+                # Tải ảnh từ URL được cung cấp
+                response = requests.get(form.image.data)
+                if response.status_code == 200:
+                    # Upload ảnh lên Cloudinary
+                    result = cloudinary.uploader.upload(BytesIO(response.content))
+                    # Cập nhật URL của ảnh trong model
+                    model.image = result['secure_url']
+                else:
+                    raise ValueError("Không thể tải ảnh từ URL đã cung cấp")
+            except Exception as e:
+                raise ValueError(f"Lỗi khi xử lý ảnh: {str(e)}")
 
 class SaleInvoiceView(AuthModelView):
     can_view_details = True

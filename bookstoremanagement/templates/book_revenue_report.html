@@ -115,44 +115,47 @@
       </div>
 
       <table>
-        <thead>
-          <tr>
+    <thead>
+        <tr>
             <th>Tháng</th>
             <th>STT</th>
             <th>Tên sách</th>
+            <th>Thể loại</th>
             <th>Số lượng</th>
             <th>Tỷ lệ (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set total_quantity = namespace(value=0) %} {% for book in
-          book_stats %} {% set total_quantity.value = total_quantity.value +
-          book[2] %} {% endfor %} {% set current_month = 0 %} {% set counter = 1
-          %} {% for book in book_stats %}
-          <tr>
-            {% if book[0] != current_month %} {% set current_month = book[0] %}
-            <td>{{ book[0] }}</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% set total_quantity = namespace(value=0) %}
+        {% for book in book_stats %}
+            {% set total_quantity.value = total_quantity.value + book[3] %}
+        {% endfor %}
+        {% set current_month = 0 %}
+        {% set counter = 1 %}
+        {% for book in book_stats %}
+        <tr>
+            {% if book[0] != current_month %}
+                {% set current_month = book[0] %}
+                <td>{{ book[0] }}</td>
             {% else %}
-            <td></td>
+                <td></td>
             {% endif %}
-
-            <!-- Dùng counter trực tiếp -->
             <td>{{ loop.index }}</td>
             <td>{{ book[1] }}</td>
             <td>{{ book[2] }}</td>
+            <td>{{ book[3] }}</td>
             <td class="percentage">
-              {{ "%.2f"|format(book[2] / total_quantity.value * 100) }}%
+                {{ "%.2f"|format(book[3] / total_quantity.value * 100) }}%
             </td>
-          </tr>
-          {% set counter = counter + 1 %} {% endfor %}
-
-          <tr class="total-row">
-            <td colspan="3">Tổng cộng</td>
+        </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td colspan="4">Tổng cộng</td>
             <td>{{ total_quantity.value }}</td>
             <td>100%</td>
-          </tr>
-        </tbody>
-      </table>
+        </tr>
+    </tbody>
+</table>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
