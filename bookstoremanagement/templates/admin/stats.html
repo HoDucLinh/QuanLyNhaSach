@@ -3,7 +3,7 @@
 
 <!-- Header Section -->
 <div class="container-fluid py-4">
-    <h1 class="custom-title">BOOK HAVEN</h1>
+<!--    <h1 class="custom-title">BOOK HAVEN</h1>-->
 
 <style>
     .custom-title {
@@ -27,6 +27,7 @@
         100% { background-position: 0% 50%; }
     }
 </style>
+
 
     <!-- Category Revenue Section -->
     <div class="card mb-4 shadow-sm">
@@ -104,39 +105,6 @@
         </div>
     </div>
 
-    <!-- Monthly Revenue Section -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">2. Thống kê doanh thu theo tháng</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead class="table-primary">
-                                <tr>
-                                    <th>Tháng</th>
-                                    <th class="text-end">Doanh thu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for s in month_stats %}
-                                <tr>
-                                    <td>Tháng {{ s[0] }}</td>
-                                    <td class="text-end">{{ "{:,.1f}".format(s[1]) }} VND</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <canvas id="CateMonthChartId"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Book Sales Section -->
     <div class="card mb-4 shadow-sm">
@@ -194,7 +162,7 @@
                                         <tr>
                                             <td>{{ s[0] }}</td>
                                             <td>{{ s[1] }}</td>
-                                            <td class="text-end">{{ s[2] }}</td>
+                                            <td class="text-end">{{ s[3] }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -210,6 +178,41 @@
         </div>
     </div>
 </div>
+
+<!-- Monthly Revenue Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">2. Thống kê doanh thu theo tháng</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Tháng</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in month_stats %}
+                                <tr>
+                                    <td>Tháng {{ s[0] }}</td>
+                                    <td class="text-end">{{ "{:,.1f}".format(s[1]) }} VND</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="CateMonthChartId"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -236,14 +239,14 @@
     {% endfor %}
 
     {% for s in month_stats %}
-        labels2.push({{ s[0] }})
-        info2.push({{ s[1] }})
+    labels2.push('Tháng ' + {{ s[0] }})  // Thêm chữ "Tháng" vào label
+    info2.push({{ s[1] }})
 
-        r = Math.random() * 255;
-        g = Math.random() * 255;
-        b = Math.random() * 255;
-        colors2.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
-        borderColors2.push(`rgb(${r}, ${g}, ${b}, 1)`)
+    r = Math.random() * 255;
+    g = Math.random() * 255;
+    b = Math.random() * 255;
+    colors2.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
+    borderColors2.push(`rgb(${r}, ${g}, ${b}, 1)`)
     {% endfor %}
 
     let labels3 = [], info3 = []
@@ -251,7 +254,7 @@
 
     {% for s in book_stats %}
         labels3.push('Tháng ' + {{ s[0] }} + ' - ' + '{{ s[1] }}')
-        info3.push({{ s[2] }})
+        info3.push({{ s[3] }})  // Chú ý: index thay đổi vì thêm cột thể loại
 
         r = Math.random() * 255
         g = Math.random() * 255
@@ -259,6 +262,8 @@
         colors3.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
         borderColors3.push(`rgb(${r}, ${g}, ${b}, 1)`)
     {% endfor %}
+
+
 
     window.onload = function() {
         const ctx = document.getElementById("categoryChartId").getContext('2d')
@@ -270,30 +275,48 @@
         loadChart(ctx3, labels3, info3, 'doughnut', colors3, borderColors3)
     }
 
-    function loadChart(ctx, labels, info, type, colors, borderColors) {
-        new Chart(ctx, {
-            type: type,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Thống kê doanh thu",
-                    data: info,
-                    backgroundColor: colors,
-                    borderColor: borderColors,
-                    borderWidth: 1,
-                }],
+    // Cập nhật phần cấu hình biểu đồ
+function loadChart(ctx, labels, info, type, colors, borderColors) {
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Thống kê doanh thu",
+                data: info,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND'
+                            }).format(context.raw);
+                            return label;
+                        }
                     }
                 }
             }
-        });
-    }
+        }
+    });
+}
 </script>
 
 {% endblock %}

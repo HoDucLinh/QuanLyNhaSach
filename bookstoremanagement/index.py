@@ -605,12 +605,12 @@ def order():
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     status = request.args.get("status")
+    user_id = current_user.id
+    # Lấy giỏ hàng của người dùng
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    # Lấy chi tiết giỏ hàng
+    cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
     if status == "1":
-        user_id = current_user.id
-        # Lấy giỏ hàng của người dùng
-        cart = Cart.query.filter_by(user_id=user_id).first()
-        # Lấy chi tiết giỏ hàng
-        cart_details = CartDetail.query.filter_by(cart_id=cart.id).all()
 
         sale_invoice = SaleInvoice(
             paymentStatus="Paid",
@@ -635,7 +635,26 @@ def callback():
         db.session.commit()
         return redirect("account")
     else:
-        return "Thanh toan khong thanh cong!!!"
+        sale_invoice = SaleInvoice(
+            paymentStatus="Cancelled",
+            customer_name=current_user.name,
+            customer_id=user_id,
+            orderDate=datetime.utcnow()
+        )
+        db.session.add(sale_invoice)
+        db.session.commit()  # Lưu SaleInvoice để có ID
+
+        # Lưu chi tiết hóa đơn từ giỏ hàng vào bảng DetailInvoice
+        for detail in cart_details:
+            detail_invoice = DetailInvoice(
+                book_id=detail.book_id,
+                saleInvoice_id=sale_invoice.id,
+                quantity=detail.quantity
+            )
+            db.session.add(detail_invoice)
+        db.session.commit()
+        return redirect("account")
+
 
 
 @app.route('/book_revenue-report')
