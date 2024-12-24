@@ -315,7 +315,7 @@ def customers():
 def customer_detail(saleInvoice_id):
     sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
     return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details,
-                           total_amount=dao.view_invoice(saleInvoice_id))
+                           total_amount=total_amount)
 
 
 @app.route('/payment', methods=['POST'])
