@@ -164,13 +164,26 @@ def view_books():
 # Tạo hóa đơn
 @app.route('/create-invoice', methods=['GET', 'POST'])
 def create_invoice():
-    books = []
     books = dao.load_books()
+    err_msg = None
     print(books)
     if request.method == 'POST':
         customer_name = request.form.get('customer_name')  # Lấy tên khách hàng từ form
         order_date = request.form.get('orderDate')  # Lấy ngày đặt hàng từ form
         sale_id = current_user.id  # Lấy ID người bán từ người dùng hiện tại
+
+        # Lấy dữ liệu sách và số lượng từ form
+        customer_name = request.form.get('customer_name')
+        book_ids = request.form.getlist('books[]')
+        quantities = request.form.getlist('quantities[]')
+        prices = request.form.getlist('prices[]')
+
+        # Kiểm tra số lượng sách mua
+        for book_id, quantity in zip(book_ids,quantities):
+            book = dao.load_books(book_id==book_id)
+            if book_id and int(quantity)>book.quantity:
+                err_msg = f"Số lượng sách '{book.name}' yêu cầu vượt quá số lượng tồn kho ({book.quantity})."
+                return render_template("create_invoice.html", books=books, err_msg=err_msg)
 
         # Tạo hóa đơn mới
         invoice = SaleInvoice(
@@ -181,12 +194,6 @@ def create_invoice():
         )
         db.session.add(invoice)
         db.session.flush()
-
-        # Lấy dữ liệu sách và số lượng từ form
-        customer_name = request.form.get('customer_name')
-        book_ids = request.form.getlist('books[]')
-        quantities = request.form.getlist('quantities[]')
-        prices = request.form.getlist('prices[]')
 
         # Tạo các chi tiết hóa đơn cho từng sách
         for book_id, quantity, price in zip(book_ids, quantities, prices):
