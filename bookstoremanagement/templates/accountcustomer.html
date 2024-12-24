@@ -50,7 +50,7 @@
                                     {{ invoice.paymentStatus }}
                                 </span>
                             </td>
-                            <td>${{ "%.2f" | format(invoice.totalAmount) }}</td>
+                            <td>{{ "{:,.0f}".format(invoice.totalAmount) }} VNĐ</td>
                             <!-- Button to trigger modal -->
                             <td><button class="btn" data-bs-toggle="modal" data-bs-target="#orderDetailsModal-{{ invoice.id }}">
                                 <i class="bi bi-pencil-square"></i>
@@ -88,7 +88,7 @@
                         <tr>
                             <td>{{ book.name }}</td>
                             <td>{{ book.category.name }}</td>
-                            <td>${{ book.price }}</td>
+                            <td>{{ "{:,.0f}".format(book.price) }} VNĐ</td>
                             <td>
                                 <form method="POST" class="d-inline">
                                     <input type="hidden" name="book_id" value="{{ book.id }}">
@@ -120,7 +120,7 @@
             <div class="modal-body">
                 <h5>Order Date: {{ invoice.orderDate }}</h5>
                 <h6>Payment Status: {{ invoice.paymentStatus }}</h6>
-                <h6>Total Amount: ${{ "%.2f" | format(invoice.totalAmount) }}</h6>
+                <h6>Total Amount: {{ "{:,.0f}".format(invoice.totalAmount) }} VNĐ</h6>
                 <hr>
                 <h5>Items in Order:</h5>
                 <table class="table table-bordered">
@@ -136,7 +136,7 @@
                     <tr>
                         <td>{{ detail.book.name }}</td> <!-- Truy cập tên sách -->
                         <td>{{ detail.quantity }}</td>
-                        <td>${{ "%.2f" | format(detail.book.price) }}</td> <!-- Truy cập giá sách -->
+                        <td>{{ "{:,.0f}".format(detail.book.price) }} VNĐ</td> <!-- Truy cập giá sách -->
                     </tr>
                     {% endfor %}
                     </tbody>

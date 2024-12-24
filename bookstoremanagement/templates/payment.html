@@ -84,7 +84,7 @@
                     </div>
                     <div class="d-flex justify-content-between fw-bold">
                         <p><strong>Total:</strong></p>
-                        <p>{{ totalAmount }}</p>
+                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
                     </div>
                 </div>
             </div>
@@ -196,7 +196,7 @@ storePickupRadio.addEventListener('change', () => {
 form.addEventListener('submit', function (event) {
     if (storePickupRadio.checked) {  // If store pickup is selected
         if (!payOnlineRadio.checked & !payAtStoreRadio.checked) {  // Check if both payment methods are selected
-            alert("Please select both payment methods.");
+            alert("Please select ones payment methods.");
             event.preventDefault();  // Prevent form submission
         }
     }
