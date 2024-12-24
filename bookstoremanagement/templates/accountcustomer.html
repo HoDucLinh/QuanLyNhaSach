@@ -41,6 +41,8 @@
                                 <span class="badge
                                     {% if invoice.paymentStatus == 'Paid' %}
                                         bg-success
+                                    {% elif invoice.paymentSatus == 'Paid' %}
+                                        bg-danger
                                     {% else %}
                                         bg-danger
                                     {% endif %}
@@ -88,9 +90,9 @@
                             <td>{{ book.category.name }}</td>
                             <td>${{ book.price }}</td>
                             <td>
-                                <form action="/add_to_cart" method="POST" class="d-inline">
+                                <form method="POST" class="d-inline">
                                     <input type="hidden" name="book_id" value="{{ book.id }}">
-                                    <button type="submit" class="btn" style="margin-top:0"><i class="bi bi-cart"></i></button>
+                                    <button type="submit" class="btn add-to-cart" data-book-id="{{ book.id }}" style="margin-top:0"><i class="bi bi-cart"></i></button>
                                 </form>
                                 <form action="/delete_from_favorite" method="POST" class="d-inline">
                                     <input type="hidden" name="book_id" value="{{ book.id }}">
@@ -106,8 +108,6 @@
         </div>
     </div>
 </div>
-
-<!-- Modal to show order details -->
 <!-- Modal to show order details -->
 {% for invoice in invoices %}
 <div class="modal fade" id="orderDetailsModal-{{ invoice.id }}" tabindex="-1" aria-labelledby="orderDetailsModalLabel-{{ invoice.id }}" aria-hidden="true">
@@ -146,5 +146,34 @@
     </div>
 </div>
 {% endfor %}
+<script>
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // Ngăn chặn tải lại trang
+            const bookId = this.dataset.bookId; // Lấy ID sách từ thuộc tính data
 
+            fetch('/add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    book_id: bookId,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message); // Hiển thị thông báo thành công
+                } else {
+                    alert(data.message); // Hiển thị thông báo lỗi
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+            });
+        });
+    });
+</script>
 {% endblock %}
