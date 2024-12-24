@@ -39,7 +39,6 @@
                             </li>
                             {% endfor %}
                         </ul>
-
                         {% if books %}
                         <div class="row">
                             {% for book in books %}
@@ -53,7 +52,7 @@
                                         <figcaption>
                                             <h3>{{ book.name }}</h3>
                                             <span>{{ book.publisherName }}</span>
-                                            <div class="item-price">${{ book.price }}
+                                            <div class="item-price"><p>{{ "{:,.0f}".format(book.price) }} VNĐ</p>
                                                 <i class="far fa-heart" id="heart-{{ book.id }}"
                                                    data-book-id="{{ book.id }}"
                                                    data-user-id="{{ current_user.id }}"></i>

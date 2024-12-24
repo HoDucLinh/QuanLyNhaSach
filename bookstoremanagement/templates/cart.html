@@ -34,7 +34,7 @@
                 <strong>{{ item.name }}</strong><br>
                 <small>{{ item.description }}</small>
             </td>
-            <td class="price">{{ item.price }} VND</td>
+            <td class="price">{{ "{:,.0f}".format(item.price) }} VNĐ</td>
             <td>
                 <!-- Form cập nhật số lượng -->
                 <form method="POST" action="/update_quantity">
@@ -43,7 +43,7 @@
                            data-price="{{ item.price }}" style="width: 50px;" onchange="this.form.submit();">
                 </form>
             </td>
-            <td class="total">{{ item.total }} VND</td>
+            <td class="total">{{ "{:,.0f}".format(item.total) }} VNĐ</td>
             <td>
                 <form method="POST" action="/remove_from_cart">
                     <input type="hidden" name="book_id" value="{{ item.book_id }}">
@@ -57,7 +57,7 @@
 
     <!-- Display total price -->
     <div class="total-price">
-        <h3>Tổng cộng: {{ total_price }} VND</h3>
+        <h3>Tổng cộng: {{ "{:,.0f}".format(total_price) }} VNĐ</h3>
     </div>
     <div class="checkout">
         <form method="POST" action="/payment">

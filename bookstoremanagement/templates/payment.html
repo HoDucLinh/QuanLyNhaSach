@@ -75,7 +75,7 @@
                     <hr>
                     <div class="d-flex justify-content-between">
                         <p><strong>Subtotal:</strong></p>
-                        <p>{{ totalAmount }}</p>
+                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
 
                     </div>
                     <div class="d-flex justify-content-between">
@@ -84,7 +84,7 @@
                     </div>
                     <div class="d-flex justify-content-between fw-bold">
                         <p><strong>Total:</strong></p>
-                        <p>{{ totalAmount }}</p>
+                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
                     </div>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                             <h6>Shipping Method</h6>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="shippingMethod" id="homeDelivery"
-                                       value="homeDelivery" checked>
+                                       value="homeDelivery">
                                 <label class="form-check-label" for="homeDelivery">
                                     Deliver to Address
                                 </label>
@@ -170,33 +170,34 @@
     const homeDeliveryRadio = document.getElementById('homeDelivery');
 const storePickupRadio = document.getElementById('storePickup');
 const deliveryAddress = document.getElementById('deliveryAddress');
-const deliveryInputs = deliveryAddress.querySelectorAll('input'); // Lấy tất cả các trường input trong deliveryAddress
+const paymentMethod = document.getElementById('paymentMethod');
+const payOnlineRadio = document.getElementById('payOnline');
+const payAtStoreRadio = document.getElementById('payAtStore');
 const form = document.getElementById('checkoutForm');
-    const payOnlineRadio = document.getElementById('payOnline');
-    const payAtStoreRadio = document.getElementById('payAtStore');
 
-// Khi chọn phương thức giao hàng về nhà
+// Get all the input fields inside the delivery address section
+const deliveryInputs = deliveryAddress.querySelectorAll('input');
+
+// Event listener for home delivery selection
 homeDeliveryRadio.addEventListener('change', () => {
-    deliveryAddress.style.display = 'block'; // Hiện phần địa chỉ giao hàng
-    paymentMethod.style.display = 'none';   // Ẩn phần phương thức thanh toán
-
-    // Đặt thuộc tính required cho tất cả các trường nhập liệu trong deliveryAddress
-    deliveryInputs.forEach(input => input.setAttribute('required', ''));
+    deliveryAddress.style.display = 'block';  // Show delivery address
+    paymentMethod.style.display = 'none';     // Hide payment method
+    deliveryInputs.forEach(input => input.setAttribute('required', ''));  // Make inputs required
 });
 
-// Khi chọn phương thức lấy hàng tại cửa hàng
+// Event listener for store pickup selection
 storePickupRadio.addEventListener('change', () => {
-    deliveryAddress.style.display = 'none'; // Ẩn phần địa chỉ giao hàng
-    paymentMethod.style.display = 'block';  // Hiện phần phương thức thanh toán
-
-    // Loại bỏ thuộc tính required khỏi các trường nhập liệu trong deliveryAddress
-    deliveryInputs.forEach(input => input.removeAttribute('required'));
+    deliveryAddress.style.display = 'none';  // Hide delivery address
+    paymentMethod.style.display = 'block';   // Show payment method
+    deliveryInputs.forEach(input => input.removeAttribute('required'));  // Remove required from inputs
 });
+
+// Validate the form before submission
 form.addEventListener('submit', function (event) {
-    if (storePickupRadio.checked) { // If store pickup is selected
-        if (!payOnlineRadio.checked & !payAtStoreRadio.checked) { // Check if both payment methods are selected
+    if (storePickupRadio.checked) {  // If store pickup is selected
+        if (!payOnlineRadio.checked & !payAtStoreRadio.checked) {  // Check if both payment methods are selected
             alert("Please select ones payment methods.");
-            event.preventDefault(); // Prevent form submission
+            event.preventDefault();  // Prevent form submission
         }
     }
 });
