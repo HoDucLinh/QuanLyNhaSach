@@ -132,6 +132,16 @@
             margin: 15px auto;
         }
 
+        .thank-you {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .thank-you small {
+            font-size: 14px;
+            color: #666;
+        }
+
         /* Nút in và quay lại */
         .action-buttons {
             display: flex;
@@ -163,6 +173,9 @@
                 box-shadow: none;
                 margin: 0;
                 padding: 15px;
+            }
+            .action-buttons {
+                display: none;
             }
             @page {
                 margin: 0.5cm;
@@ -207,8 +220,8 @@
                     <td>{{ detail.book_name }}</td>
                     <td>{{ detail.category }}</td>
                     <td>{{ detail.quantity }}</td>
-                    <td>{{ "{:,.0f}".format(detail.price) }} đ</td>
-                    <td>{{ "{:,.0f}".format(detail.quantity * detail.price) }} đ</td>
+                    <td>{{ "{:,.0f}".format(detail.price) }} VNĐ</td>
+                    <td>{{ "{:,.0f}".format(detail.quantity * detail.price) }} VNĐ</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -216,7 +229,7 @@
 
         <div class="total-section">
             <div class="total-amount">
-                Tổng tiền: {{ "{:,.0f}".format(total_amount) }} đ
+                Tổng tiền: {{ "{:,.0f}".format(total_amount) }} VNĐ
             </div>
         </div>
 
@@ -234,9 +247,13 @@
             </div>
         </div>
 
+        <div class="thank-you">
+            <small class="text-muted">Cảm ơn quý khách đã mua hàng tại cửa hàng chúng tôi!</small>
+        </div>
+
         <!-- Nút Quay lại và Nút In -->
         <div class="action-buttons">
-           <a href="{{ url_for('create_invoice') }}" class="btn">Quay lại</a>
+            <a href="{{ url_for('create_invoice') }}" class="btn">Quay lại</a>
             <button class="btn" onclick="window.print()">In hóa đơn</button>
         </div>
     </div>

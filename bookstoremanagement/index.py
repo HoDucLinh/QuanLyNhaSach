@@ -201,7 +201,6 @@ def create_invoice():
                 dao.updateQuantityBook(int(book_id), int(quantity))
 
         db.session.commit()
-        flash('Tạo hóa đơn thành công', 'success')
         return redirect(url_for('view_invoice', saleInvoice_id=invoice.id))
     return render_template("create_invoice.html", books=books)
 
@@ -220,6 +219,8 @@ def view_invoice(saleInvoice_id):
 # Nhập sách vào kho
 @app.route('/import-book', methods=['GET', 'POST'])
 def import_books():
+    regulations = dao.get_current_regulations()
+    err_msg = None  # Khai báo err_msg ở ngoài vòng lặp
     if request.method == 'POST':
         book_ids = request.form.getlist('book_id[]')
         quantities = request.form.getlist('quantity[]')
@@ -232,18 +233,20 @@ def import_books():
                 # Kiểm tra điều kiện nhập hàng
                 is_valid, message = dao.check_import_conditions(book_id)
                 if not is_valid:
-                    flash(message, 'danger')
-                    continue
+                    book = dao.load_books(book_id)
+                    if book:
+                        err_msg = f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
+                    break  # Dừng lại nếu có lỗi
 
                 is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity)
                 if not is_valid_min_quantity:
-                    flash(message_min_quantity, 'danger')
-                    continue
+                    err_msg = f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
+                    break  # Dừng lại nếu có lỗi
 
                 book = dao.load_books(book_id)
                 if not book:
-                    flash(f"Sách với ID {book_id} không tồn tại", 'danger')
-                    continue
+                    err_msg = "Sách với ID {book_id} không tồn tại"
+                    break  # Dừng lại nếu có lỗi
 
                 # Cập nhật số lượng sách
                 book.quantity += quantity
@@ -262,10 +265,11 @@ def import_books():
             }
             return render_template('import_invoice.html', invoice=import_invoice)
 
-        return redirect(url_for('import_books'))
+        return render_template('import_book.html', books=dao.load_books(), err_msg=err_msg)  # Trả err_msg vào template
 
     books = dao.load_books()
-    return render_template('import_book.html', books=books)
+    return render_template('import_book.html', books=books, err_msg=err_msg)
+
 
 
 # Các đơn hàng Online và nhận tại Store
@@ -296,7 +300,6 @@ def order_detail(saleInvoice_id):
                 quantity = detail.quantity  # Lấy số lượng sách từ chi tiết
                 dao.updateQuantityBook(book_id, quantity)  # Gọi hàm updateQuantityBook để cập nhật số lượng sách
             db.session.commit()
-            flash('Thanh toán đã được xác nhận!', 'success')
             return redirect(url_for('show_orders'))
 
     return render_template('order_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
@@ -310,13 +313,7 @@ def customers():
 
 @app.route('/customers_detail/<int:saleInvoice_id>', methods=['GET'])
 def customer_detail(saleInvoice_id):
-    sale_invoice = SaleInvoice.query.get(saleInvoice_id)
-    details = db.session.query(
-        Book.name,
-        DetailInvoice.quantity,
-        (DetailInvoice.quantity * Book.price).label('total_price')
-    ).join(DetailInvoice, Book.id == DetailInvoice.book_id) \
-        .filter(DetailInvoice.saleInvoice_id == saleInvoice_id).all()
+    sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
     return render_template('customers_detail.html', sale_invoice=sale_invoice, details=details,
                            total_amount=dao.view_invoice(saleInvoice_id))
 
