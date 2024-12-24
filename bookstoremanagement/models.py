@@ -120,7 +120,7 @@ class SaleInvoice(db.Model):
     customer_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
     # lưu id của sale , neu null là mua onl ,neeseu có gia trị là mua off
     sale_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
-    orderDate = db.Column(db.Date, default=datetime.utcnow())
+    orderDate = db.Column(db.Date, default=datetime.now())
 
     def __str__(self):
         return f"SaleInvoice {self.id}, Customer {self.customer_name}, Status {self.paymentStatus}"
@@ -174,7 +174,7 @@ if __name__ == "__main__":
                 db.session.add(book)
         db.session.commit()
 
-        new_user1 = User(name='Ho Duc Linh', username='HDL',
+        new_user1 = User(name='Ho Duc Linh', username='Ho Duc Linh',
                          password=str(hashlib.md5("hdl".encode('utf-8')).hexdigest()), email='hdl@gmail.com')
         new_user2 = User(name='Nguyen Quang Khanh', username='NQK',
                          password=str(hashlib.md5("nqk".encode('utf-8')).hexdigest()), email='nqk@gmail.com')
@@ -187,17 +187,21 @@ if __name__ == "__main__":
         db.session.commit()
 
         sale_invoices = [
-            SaleInvoice(id=1, paymentStatus="Paid",customer_name="HDL", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
-            SaleInvoice(id=2, paymentStatus="Pending", customer_name="HDL",customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
-            SaleInvoice(id=3, paymentStatus="Paid", customer_name="NQK",customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
+            SaleInvoice(id=1, paymentStatus="Paid",customer_name="Ho Duc Linh", customer_id=1, sale_id=None, orderDate=date(2024, 12, 1)),
+            SaleInvoice(id=2, paymentStatus="Pending", customer_name="Ho Duc Linh",customer_id=1, sale_id=None, orderDate=date(2024, 12, 2)),
+            SaleInvoice(id=3, paymentStatus="Cancelled", customer_name="Ho Duc Linh", customer_id=1, sale_id=None,orderDate=date(2024, 12, 2)),
+            SaleInvoice(id=4, paymentStatus="Paid", customer_name="Nguyen Quang Khanh",customer_id=2, sale_id=None, orderDate=date(2024, 12, 3)),
         ]
         db.session.add_all(sale_invoices)
         db.session.commit()
 
         detail_invoices = [
-            DetailInvoice(id=1, book_id=1, saleInvoice_id=1, quantity=2),  # 2 quyển Python Basics
-            DetailInvoice(id=2, book_id=2, saleInvoice_id=1, quantity=1),  # 1 quyển Flask Web Development
-            DetailInvoice(id=3, book_id=3, saleInvoice_id=2, quantity=3),  # 3 quyển Database Design
+            DetailInvoice(id=1, book_id=1, saleInvoice_id=1, quantity=2),
+            DetailInvoice(id=2, book_id=2, saleInvoice_id=1, quantity=1),
+            DetailInvoice(id=3, book_id=3, saleInvoice_id=2, quantity=3),
+            DetailInvoice(id=4, book_id=3, saleInvoice_id=3, quantity=3),
+            DetailInvoice(id=5, book_id=3, saleInvoice_id=4, quantity=3),
+
         ]
         db.session.add_all(detail_invoices)
         db.session.commit()

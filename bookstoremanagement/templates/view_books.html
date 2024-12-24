@@ -329,7 +329,7 @@
             <td>
               <span class="badge bg-secondary">{{ book['category_id'] }}</span>
             </td>
-            <td>${{ "%.2f"|format(book['price']) }}</td>
+            <td>{{ "{:,.0f}".format(book['price']) }} VNĐ</td>
             <td>
               {% if book['quantity'] > 0 %}
                 <span class="badge bg-success">{{ book['quantity'] }}</span>
