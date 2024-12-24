@@ -499,20 +499,28 @@ def edit_profile():
                 current_user.password = new_password
                 updated = True
             else:
-                err_msg = "Mat khau khong dung!!!"
-                return render_template('editprofile.html', msg=err_msg)
+                flash("Mật khẩu không đúng.")
+
+        # Kiểm tra và cập nhật avatar
         if avatar:
-            res = cloudinary.uploader.upload(avatar)
-            avatar_path = res['secure_url']
-            current_user.avatar = avatar_path
-            updated = True
+            try:
+                res = cloudinary.uploader.upload(avatar)
+                avatar_path = res['secure_url']  # Lấy URL của ảnh đã upload
+                current_user.avatar = avatar_path  # Cập nhật avatar cho người dùng
+                updated = True
+            except Exception as e:
+                flash(f"Không thể tải ảnh lên: {e}", "error")
+
         # Nếu có thay đổi, lưu vào cơ sở dữ liệu
         if updated:
             db.session.commit()
-            err_msg = "Cap nhat thanh cong"
+            flash("Cập nhật thành công.", "success")
+        else:
+            flash("Không có thay đổi nào được thực hiện.", "info")
 
     # Phương thức GET: hiển thị form
-    return render_template('editprofile.html', msg=err_msg)
+    return render_template('editprofile.html')
+
 
 
 @app.route('/toggle_favorite', methods=['POST'])

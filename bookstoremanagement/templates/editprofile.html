@@ -17,11 +17,6 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                {%if msg%}
-                <div>
-                    <p>{{msg}}</p>
-                </div>
-                {%endif%}
                 <div class="card-header bg-primary text-white text-center">
                     <h5 class="mb-0">{{current_user.name}}</h5>
                 </div>
@@ -77,6 +72,14 @@
     document.getElementById('togglePasswordFields').addEventListener('click', function() {
         const passwordFields = document.getElementById('passwordFields');
         passwordFields.style.display = passwordFields.style.display === 'none' ? 'block' : 'none';
+    });
+     // Lấy danh sách thông báo từ server và hiển thị qua alert
+    document.addEventListener('DOMContentLoaded', function () {
+        const messages = {{ get_flashed_messages(with_categories=True) | tojson }};
+        messages.forEach(([category, message]) => {
+            // Hiển thị thông báo với alert
+            alert(`${category.toUpperCase()}: ${message}`);
+        });
     });
 </script>
 {%endblock%}
