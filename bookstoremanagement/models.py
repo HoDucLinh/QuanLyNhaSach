@@ -174,7 +174,7 @@ if __name__ == "__main__":
                 db.session.add(book)
         db.session.commit()
 
-        new_user1 = User(name='Ho Duc Linh', username='HDL',
+        new_user1 = User(name='Ho Duc Linh', username='Ho Duc Linh',
                          password=str(hashlib.md5("hdl".encode('utf-8')).hexdigest()), email='hdl@gmail.com')
         new_user2 = User(name='Nguyen Quang Khanh', username='NQK',
                          password=str(hashlib.md5("nqk".encode('utf-8')).hexdigest()), email='nqk@gmail.com')
