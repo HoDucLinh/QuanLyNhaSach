@@ -37,7 +37,7 @@
                                     <!-- Display the book name, author, and price -->
                                     <h3>{{ item.book.name }}</h3>
                                     <span>{{ item.book.publisherName }}</span>
-                                    <div class="item-price">${{ item.book.price }}</div>
+                                    <div class="item-price">{{ "{:,.0f}".format(item.book.price) }} VNĐ</div>
                                 </figcaption>
                             </div>
                         </div>
