@@ -35,6 +35,8 @@
       overflow-y: auto;
       transition: transform 0.3s ease;
       z-index: 1000;
+      height: 100%;
+      padding-top: 20px;
     }
 
     @media (max-width: 768px) {
@@ -236,9 +238,9 @@
   <div class="d-flex">
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-      <h4 class="text-center py-4">Bookstore Panel</h4>
+      <h4 class="text-center text-white mb-4">Book Haven</h4>
       <nav aria-label="Main navigation">
-   <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
+      <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('view_books')}}" class="active"><i class="fas fa-book me-2"></i>Books</a>
       <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
       <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
@@ -267,7 +269,7 @@
             </div>
             <div class="col-md-6">
               <button class="btn btn-secondary w-100" onclick="toggleFilter('search')">
-                <i class="fas fa-search me-2"></i>Search by Title
+                <i class="fas fa-search me-2"></i>Search Books
               </button>
             </div>
           </div>
@@ -293,7 +295,9 @@
           <div id="searchFilter" class="filter-section mt-3">
             <form method="GET" action="/view-books" class="row g-3">
               <div class="col-md-8">
-                <input type="text" class="form-control" name="search_book" placeholder="Enter book title..." value="{{ request.args.get('search_book', '') }}">
+                <input type="text" class="form-control" name="search_book"
+                       placeholder="Enter keywords"
+                       value="{{ request.args.get('search_book', '') }}">
               </div>
               <div class="col-md-4">
                 <button type="submit" class="btn btn-primary w-100">Search</button>

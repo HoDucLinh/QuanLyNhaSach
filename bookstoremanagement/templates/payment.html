@@ -194,9 +194,16 @@ storePickupRadio.addEventListener('change', () => {
 
 // Validate the form before submission
 form.addEventListener('submit', function (event) {
-    if (storePickupRadio.checked) {  // If store pickup is selected
-        if (!payOnlineRadio.checked & !payAtStoreRadio.checked) {  // Check if both payment methods are selected
-            alert("Please select ones payment methods.");
+    // Check if shipping method is selected
+    if (!homeDeliveryRadio.checked && !storePickupRadio.checked) {
+        alert("Please select a shipping method.");
+        event.preventDefault();  // Prevent form submission
+    }
+
+    // If store pickup is selected, ensure that a payment method is chosen
+    if (storePickupRadio.checked) {
+        if (!payOnlineRadio.checked && !payAtStoreRadio.checked) {
+            alert("Please select a payment method.");
             event.preventDefault();  // Prevent form submission
         }
     }

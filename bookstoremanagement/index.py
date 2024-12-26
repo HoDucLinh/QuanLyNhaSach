@@ -142,7 +142,7 @@ def view_books():
 
     # Lấy giá trị từ tham số
     category_id = request.args.get('category_id', type=int)
-    search_book = request.args.get('search_book', '')
+    keywords = request.args.get('search_book', '').lower().split()
 
     # Lọc sách theo thể loại
     if category_id:
@@ -154,8 +154,13 @@ def view_books():
         books = Book.query.all()
 
     # Tìm sách theo từ khóa
-    if search_book:
-        books = [book for book in books if search_book.lower() in book.name.lower()]
+    if keywords:
+        filtered_books = []
+        for book in books:
+            book_text = f"{book.name} {book.publisherName}".lower()
+            if all(keyword in book_text for keyword in keywords):
+                filtered_books.append(book)
+            books = filtered_books
 
     return render_template('view_books.html', books=books, categories=categories,
                            selected_category_name=selected_category_name)
@@ -166,7 +171,6 @@ def view_books():
 def create_invoice():
     books = dao.load_books()
     err_msg = None
-    print(books)
     if request.method == 'POST':
         customer_name = request.form.get('customer_name')  # Lấy tên khách hàng từ form
         order_date = request.form.get('orderDate')  # Lấy ngày đặt hàng từ form
@@ -180,7 +184,7 @@ def create_invoice():
 
         # Kiểm tra số lượng sách mua
         for book_id, quantity in zip(book_ids,quantities):
-            book = dao.load_books(book_id==book_id)
+            book = dao.load_books(book_id)
             if book_id and int(quantity)>book.quantity:
                 err_msg = f"Số lượng sách '{book.name}' yêu cầu vượt quá số lượng tồn kho ({book.quantity})."
                 return render_template("create_invoice.html", books=books, err_msg=err_msg)
@@ -243,17 +247,17 @@ def import_books():
                     book = dao.load_books(book_id)
                     if book:
                         err_msg = f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity)
                 if not is_valid_min_quantity:
                     err_msg = f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 book = dao.load_books(book_id)
                 if not book:
                     err_msg = "Sách với ID {book_id} không tồn tại"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 # Cập nhật số lượng sách
                 book.quantity += quantity
@@ -295,22 +299,89 @@ def show_orders():
 
 @app.route('/order_detail/<int:saleInvoice_id>', methods=['GET', 'POST'])
 def order_detail(saleInvoice_id):
-    # Lấy hóa đơn và chi tiết hóa đơn từ dao (giả sử bạn đã có phương thức `view_invoice` trong dao)
     sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
+    error_message = None
 
     if request.method == 'POST':
+        action = request.form.get('action')
         if sale_invoice.paymentStatus == 'Pending':
-            sale_invoice.paymentStatus = 'Paid'
-            # Cập nhật số lượng sách sau khi thanh toán
+            inventory_check = True
+            error_details = []
+            available_details = []
+            adjustable_details = []
+            new_total = 0
+
             for detail in details:
-                book_id = detail.book_id  # Lấy book_id từ chi tiết hóa đơn
-                quantity = detail.quantity  # Lấy số lượng sách từ chi tiết
-                dao.updateQuantityBook(book_id, quantity)  # Gọi hàm updateQuantityBook để cập nhật số lượng sách
-            db.session.commit()
-            return redirect(url_for('show_orders'))
+                book = dao.load_books(book_id=detail.book_id)
+                if book.quantity < detail.quantity:
+                    inventory_check = False
+                    error_details.append({
+                        'book_name': detail.book_name,
+                        'requested': detail.quantity,
+                        'available': book.quantity,
+                        'detail_id': detail.id
+                    })
+                    adjustable_details.append({
+                        'detail': DetailInvoice.query.get(detail.id),
+                        'available': book.quantity
+                    })
+                else:
+                    available_details.append(detail)
+                    new_total += detail.price * detail.quantity
 
-    return render_template('order_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
+            if inventory_check:
+                # Nếu tất cả sách đều có đủ số lượng
+                sale_invoice.paymentStatus = 'Paid'
+                for detail in details:
+                    dao.updateQuantityBook(detail.book_id, detail.quantity)
+                db.session.commit()
 
+            else:
+                if action == 'proceed_available':
+                    # Chỉ xử lý các sách có đủ số lượng
+                    sale_invoice.paymentStatus = 'Paid'
+                    sale_invoice.total_amount = new_total
+                    for detail in adjustable_details:
+                        if detail['detail']:
+                            db.session.delete(detail['detail'])
+                    for detail in available_details:
+                        dao.updateQuantityBook(detail.book_id, detail.quantity)
+                    db.session.commit()
+
+                elif action == 'proceed_with_available_quantity':
+                    # Xử lý tất cả sách với số lượng có sẵn
+                    sale_invoice.paymentStatus = 'Paid'
+                    new_total = 0
+                    # Cập nhật số lượng cho các sách có sẵn
+                    for detail in available_details:
+                        new_total += detail.price * detail.quantity
+                        dao.updateQuantityBook(detail.book_id, detail.quantity)
+
+                    # Cập nhật số lượng cho các sách không đủ số lượng
+                    for adj_detail in adjustable_details:
+                        detail = adj_detail['detail']
+                        available = adj_detail['available']
+                        if detail:
+                            detail.quantity = available  # Cập nhật số lượng mới
+                            new_total += detail.price * available
+                            dao.updateQuantityBook(detail.book_id, available)
+
+                    sale_invoice.total_amount = new_total
+                    db.session.commit()
+
+                elif action == 'cancel_order':
+                    sale_invoice.paymentStatus = 'Cancelled'
+                    for detail in details:
+                        db.session.delete(DetailInvoice.query.get(detail.id))
+                    db.session.commit()
+
+                error_message = error_details
+
+    return render_template('order_detail.html',
+                           sale_invoice=sale_invoice,
+                           details=details,
+                           total_amount=total_amount,
+                           error_message=error_message)
 
 @app.route('/customers', methods=['GET'])
 def customers():
