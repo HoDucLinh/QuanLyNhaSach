@@ -456,13 +456,26 @@ def update_quantity():
     new_quantity = int(request.form.get('quantity'))
     cart = Cart.query.filter_by(user_id=current_user.id).first()
 
-    # Tìm sản phẩm và cập nhật số lượng
+    # Tìm sách trong kho
+    book = Book.query.filter_by(id=book_id).first()
+    if not book:
+        return jsonify({'status': 'error', 'message': 'Sách không tồn tại.'}), 400
+
+    # Kiểm tra số lượng sách trong kho
+    if new_quantity > book.quantity:
+        return jsonify({
+            'status': 'error',
+            'message': f'Số lượng yêu cầu vượt quá số lượng sách trong kho ({book.quantity}).'
+        }), 400
+
+    # Tìm sản phẩm trong giỏ hàng và cập nhật số lượng
     cart_detail = CartDetail.query.filter_by(book_id=book_id, cart_id=cart.id).first()
     if cart_detail:
         cart_detail.quantity = new_quantity
         db.session.commit()
-    # Redirect về trang giỏ hàng
-    return redirect('/cart')
+        return jsonify({'status': 'success', 'message': 'Cập nhật số lượng thành công.'}), 200
+
+    return jsonify({'status': 'error', 'message': 'Không tìm thấy sản phẩm trong giỏ hàng.'}), 400
 
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
@@ -520,7 +533,6 @@ def edit_profile():
 
     # Phương thức GET: hiển thị form
     return render_template('editprofile.html')
-
 
 
 @app.route('/toggle_favorite', methods=['POST'])
