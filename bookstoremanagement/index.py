@@ -1,11 +1,12 @@
 import math
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
-from bookstoremanagement import app, dao, db, login
+from bookstoremanagement import app, dao, db, login, mail
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 from bookstoremanagement.tasks import init_scheduler
+from flask_mail import Message, Mail
 
 app.secret_key = "123456"
 
@@ -79,6 +80,11 @@ def user_login_page():
         username = request.form.get('username')
         password = request.form.get('password')
 
+        # Kiểm tra nếu người dùng chọn "Forgot Password"
+        if request.form.get('forgotPassword'):
+            return redirect(url_for('request_reset_password'))  # Chuyển đến trang yêu cầu đặt lại mật khẩu
+
+        # Xử lý đăng nhập nếu không phải quên mật khẩu
         user = dao.auth_user(username, password)
         if user:
             login_user(user)
@@ -714,6 +720,60 @@ def category_revenue_report():
                            stats=stats,
                            from_date=from_date,
                            to_date=to_date)
+
+
+# Hàm gửi email
+def send_email(recipient_email, subject, body):
+    msg = Message(subject, sender='holinh8241@gmail.com', recipients=[recipient_email])
+    msg.body = body
+    try:
+        mail.send(msg)
+        print("Email đã được gửi thành công.")
+    except Exception as e:
+        print(f"Không thể gửi email: {e}")
+
+# Route yêu cầu đặt lại mật khẩu (trang form nhập email)
+@app.route('/reset-password', methods=['GET', 'POST'])
+def request_reset_password():
+    alert_message = None  # Biến để chứa thông báo
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            alert_message = "Email không tồn tại."
+            return render_template('request_reset_password.html', alert_message=alert_message)
+
+        token = user.get_reset_token()  # Tạo token reset
+        reset_url = url_for('reset_password', token=token, _external=True)
+
+        # Gửi email reset mật khẩu
+        subject = "Reset Your Password"
+        body = f"Click the link to reset your password: {reset_url}"
+        send_email(user.email, subject, body)
+
+        alert_message = "Một email đã được gửi để bạn đặt lại mật khẩu."
+        return render_template('request_reset_password.html', alert_message=alert_message)
+
+    return render_template('request_reset_password.html')
+
+# Route để thay đổi mật khẩu
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    alert_message = None  # Biến để chứa thông báo
+    user = User.verify_reset_token(token)
+    if not user:
+        alert_message = "Token không hợp lệ hoặc đã hết hạn"
+        return redirect(url_for('request_reset_password', alert_message=alert_message))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        new_password = str(hashlib.md5(new_password.encode('utf-8')).hexdigest())
+        user.password = new_password  # Thay đổi mật khẩu người dùng
+        db.session.commit()
+        alert_message = "Mật khẩu đã được thay đổi thành công."
+        return redirect('/login')
+
+    return render_template('reset_password.html', alert_message=alert_message)  # Truyền thông báo vào template
 
 
 if __name__ == '__main__':

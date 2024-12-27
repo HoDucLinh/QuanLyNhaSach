@@ -4,8 +4,7 @@ import json
 from bookstoremanagement import db, app
 import hashlib
 from sqlalchemy import func
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, \
-    Regulation, Favorite
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole,Regulation, Favorite
 from sqlalchemy.sql import extract
 from datetime import datetime, timedelta
 import time
