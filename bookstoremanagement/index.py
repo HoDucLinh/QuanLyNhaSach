@@ -399,13 +399,16 @@ def cart_page():
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
 
 
-@app.route('/add_to_cart', methods=['POST'])
+@app.route('/add_to_cart', methods=['GET'])
 def add_to_cart():
     # Lấy dữ liệu từ form
-    book_id = request.form.get('book_id')
+    book_id = request.args.get('book_id')
+    book = Book.query.filter_by(id = book_id).first()
 
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
+        if book.quantity <= 0:
+            return {'status': 'error', 'message': 'Sách đã hết!! Vui lòng chọn sách khác!'}, 401
         dao.insert_book_to_cart(user_id, book_id)
         return {'status': 'success', 'message': 'Thêm vào giỏ hàng thành công!'}
 

@@ -30,7 +30,7 @@
                                     <form method="POST">
                                         <input type="hidden" name="book_id" value="{{ item.book.id }}">
                                         <!-- Hidden input with the book ID -->
-                                        <button type="submit" class="add-to-cart" data-book-id="{{ item.book.id }}">Add to Cart</button>
+                                        <button type="button" class="add-to-cart" data-url="{{ url_for('add_to_cart') }}?book_id={{ item.book.id }}">Add to Cart</button>
                                     </form>
                                 </figure>
                                 <figcaption>
@@ -50,19 +50,15 @@
     </div>
 </section>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Xử lý sự kiện click cho nút Add to Cart
     document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault(); // Ngăn chặn tải lại trang
-            const bookId = this.dataset.bookId; // Lấy ID sách từ thuộc tính data
+        button.addEventListener('click', function() {
+            const url = this.dataset.url; // Lấy URL từ data-url
 
-            fetch('/add_to_cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    book_id: bookId,
-                }),
+            // Gửi yêu cầu AJAX để xử lý
+            fetch(url, {
+                method: 'GET'
             })
             .then(response => response.json())
             .then(data => {
@@ -78,5 +74,6 @@
             });
         });
     });
+});
 </script>
 {% endblock %}
