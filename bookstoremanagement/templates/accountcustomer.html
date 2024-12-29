@@ -90,9 +90,9 @@
                             <td>{{ book.category.name }}</td>
                             <td>{{ "{:,.0f}".format(book.price) }} VNĐ</td>
                             <td>
-                                <form method="POST" class="d-inline">
+                                <form method="GET" class="d-inline">
                                     <input type="hidden" name="book_id" value="{{ book.id }}">
-                                    <button type="submit" class="btn add-to-cart" data-book-id="{{ book.id }}" style="margin-top:0"><i class="bi bi-cart"></i></button>
+                                    <button type="submit" class="btn add-to-cart" data-url="{{ url_for('add_to_cart') }}?book_id={{ book.id }}" style="margin-top:0"><i class="bi bi-cart"></i></button>
                                 </form>
                                 <form action="/delete_from_favorite" method="POST" class="d-inline">
                                     <input type="hidden" name="book_id" value="{{ book.id }}">
@@ -147,31 +147,28 @@
 </div>
 {% endfor %}
 <script>
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault(); // Ngăn chặn tải lại trang
-            const bookId = this.dataset.bookId; // Lấy ID sách từ thuộc tính data
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý sự kiện click cho nút Add to Cart
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const url = this.dataset.url; // Lấy URL từ data-url
 
-            fetch('/add_to_cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    book_id: bookId,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert(data.message); // Hiển thị thông báo thành công
-                } else {
-                    alert(data.message); // Hiển thị thông báo lỗi
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                // Gửi yêu cầu AJAX để xử lý
+                fetch(url, {
+                    method: 'GET'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Hiển thị thông báo thành công
+                    } else {
+                        alert(data.message); // Hiển thị thông báo lỗi
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                });
             });
         });
     });
