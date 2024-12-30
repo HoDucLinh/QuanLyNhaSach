@@ -586,7 +586,7 @@ def order():
                 paymentStatus="Pending",
                 customer_name=current_user.name,
                 customer_id=user_id,
-                orderDate=datetime.utcnow()
+                orderDate=datetime.now()
             )
             db.session.add(sale_invoice)
             db.session.commit()  # Lưu SaleInvoice để có ID
@@ -631,7 +631,7 @@ def callback():
             paymentStatus="Paid",
             customer_name=current_user.name,
             customer_id=user_id,
-            orderDate=datetime.utcnow()
+            orderDate=datetime.now()
         )
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
@@ -654,7 +654,7 @@ def callback():
             paymentStatus="Cancelled",
             customer_name=current_user.name,
             customer_id=user_id,
-            orderDate=datetime.utcnow()
+            orderDate=datetime.now()
         )
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
