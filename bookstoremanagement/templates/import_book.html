@@ -169,6 +169,23 @@
             display: none;
         }
     }
+
+    .alert-danger {
+        border-left: 5px solid #dc3545;
+    }
+
+    .alert-danger ul {
+        padding-left: 20px;
+    }
+
+    .alert-danger li {
+        margin-bottom: 5px;
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25) !important;
+    }
 </style>
 </head>
 <body>
@@ -231,6 +248,10 @@
         Số sách đang nhập: <span id="bookCount">1</span>
     </div>
 
+    <div id="errorMessages" class="alert alert-danger" style="display: none;">
+        <ul class="mb-0"></ul>
+    </div>
+
     <script>
         function addBookEntry() {
             const container = document.getElementById('book-entries');
@@ -259,27 +280,68 @@
             const quantities = document.querySelectorAll('input[name="quantity[]"]');
             let isValid = true;
             const selectedBooks = new Set();
+            const errors = [];
 
+            // Reset trạng thái validation
+            document.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+
+            // Kiểm tra từng entry
             selects.forEach((select, index) => {
+                // Kiểm tra sách được chọn
                 if (select.value === '') {
                     isValid = false;
                     select.classList.add('is-invalid');
+                    errors.push(`Dòng ${index + 1}: Vui lòng chọn sách`);
                 } else {
+                    // Kiểm tra sách trùng
                     if (selectedBooks.has(select.value)) {
                         isValid = false;
-                        alert('Không được chọn trùng sách!');
+                        select.classList.add('is-invalid');
+                        errors.push(`Dòng ${index + 1}: Sách "${select.selectedOptions[0].text}" đã được chọn trước đó`);
                     }
                     selectedBooks.add(select.value);
                 }
 
-                if (quantities[index].value < 1) {
+                // Kiểm tra số lượng
+                const quantity = quantities[index];
+                if (!quantity.value || quantity.value < 1) {
                     isValid = false;
-                    quantities[index].classList.add('is-invalid');
+                    quantity.classList.add('is-invalid');
+                    errors.push(`Dòng ${index + 1}: Số lượng phải lớn hơn 0`);
                 }
             });
 
+            // Hiển thị tất cả lỗi
+            const errorDiv = document.getElementById('errorMessages');
+            const errorList = errorDiv.querySelector('ul');
+            
+            if (errors.length > 0) {
+                errorList.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
+                errorDiv.style.display = 'block';
+                
+                // Cuộn lên đầu để xem thông báo lỗi
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                e.preventDefault(); // Ngăn form submit khi có lỗi
+            } else {
+                errorDiv.style.display = 'none';
+            }
+
             return isValid;
         };
+
+        // Thêm sự kiện để ẩn thông báo lỗi khi người dùng bắt đầu sửa
+        document.getElementById('book-entries').addEventListener('change', function(e) {
+            if (e.target.classList.contains('is-invalid')) {
+                e.target.classList.remove('is-invalid');
+            }
+            // Kiểm tra nếu tất cả lỗi đã được sửa thì ẩn thông báo
+            if (document.querySelectorAll('.is-invalid').length === 0) {
+                document.getElementById('errorMessages').style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
