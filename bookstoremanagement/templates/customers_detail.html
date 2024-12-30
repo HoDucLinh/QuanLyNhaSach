@@ -5,22 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi Tiết Đơn Hàng Offline</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .order-info {
+        :root {
+            --primary-color: #343a40;
+            --secondary-color: #495057;
+            --accent-color: #d9d2e9;
+            --hover-color: #5a6268;
+            --text-light: #fff;
+            --sidebar-width: 250px;
+        }
+
+        body {
             background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+.sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--primary-color);
+        color: var(--text-light);
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        padding-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar a {
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        transform: translateX(5px);
+    }
+
+    .sidebar a.active {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .sidebar i {
+        width: 24px;
+        margin-right: 10px;
+        text-align: center;
+    }
+
+
+        .content {
+            margin-left: var(--sidebar-width);
             padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
         }
 
-        .product-table {
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        .card {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.2s;
         }
 
-        .total-section {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 1.2em;
+        .order-details {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .status-badge {
@@ -30,133 +106,153 @@
         }
 
         .status-paid {
-            background-color: #28a745;
-            color: white;
+            background-color: #d4edda;
+            color: #155724;
         }
 
         .status-pending {
-            background-color: #ffc107;
-            color: black;
+            background-color: #ffeeba;
+            color: #856404;
+        }
+
+        .confirm-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .confirm-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
         }
 
         @media print {
             .no-print {
                 display: none;
             }
-            .container {
-                width: 100%;
-                max-width: none;
+            .content {
+                margin-left: 0;
+            }
+            .sidebar {
+                display: none;
             }
         }
 
-        @media (max-width: 576px) {
-            .table-responsive {
-                font-size: 0.9em;
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            #sidebarToggle {
+            display: block;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Chi Tiết Đơn Hàng Offline</h1>
-            <span class="status-badge status-paid">Đã Thanh Toán</span>
-        </div>
+    <div class="sidebar no-print">
+      <h4 class="text-center text-white mb-4">Book Haven</h4>
+        <nav>
+      <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
+      <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
+      <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
+      <a href="{{ url_for('customers')}}" class="active"><i class="fas fa-users me-2"></i>Customers</a>
+      <a href="{{ url_for('show_orders')}}"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
+      <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
+        </nav>
+    </div>
 
-        <div class="order-info">
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>Thông Tin Hóa Đơn</h3>
-                    <ul class="list-unstyled">
-                        <li><strong>Mã Đơn Hàng:</strong> #{{ sale_invoice.id }}</li>
-                        <li><strong>Khách Hàng:</strong> {{ sale_invoice.customer_name }}</li>
-                        <li><strong>Ngày Đặt Hàng:</strong> {{ sale_invoice.orderDate }}</li>
-                        <li><strong>Nhân Viên Bán Hàng:</strong> {{ sale_invoice.sale_id }}</li>
-                    </ul>
+    <div class="content">
+        <div class="container mt-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0 text-center">Chi tiết đơn hàng</h4>
                 </div>
-                <div class="col-md-6">
-                    <h3>Thông Tin Thanh Toán</h3>
-                    <ul class="list-unstyled">
-                        <li><strong>Phương Thức:</strong> Tiền mặt</li>
-                        <li><strong>Trạng Thái:</strong> Đã thanh toán</li>
-                    </ul>
+
+                <div class="card-body">
+                    <div class="order-details">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng</h5>
+                                <p class="mb-1"><strong>Mã đơn hàng:</strong> #{{ sale_invoice.id }}</p>
+                                <p class="mb-1"><strong>Ngày đặt hàng:</strong> {{ sale_invoice.orderDate }}</p>
+                                <p class="mb-1"><strong>Nhân viên bán hàng:</strong> {{ sale_invoice.sale_id }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-user me-2"></i>Thông tin khách hàng</h5>
+                                <p class="mb-1"><strong>Tên khách hàng:</strong> {{ sale_invoice.customer_name }}</p>
+                                <p class="mb-1">
+                                    <strong>Phương thức thanh toán:</strong> Tiền mặt
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Trạng thái:</strong>
+                                    <span class="status-badge status-paid">Đã thanh toán</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Tên Sách</th>
+                                        <th>Số Lượng</th>
+                                        <th>Đơn Giá</th>
+                                        <th>Thành Tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in details %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ detail[1] }}</td>
+                                        <td class="text-center">{{ detail[3] }}</td>
+                                        <td class="text-end">{{ "{:,.0f}".format(detail[4]|float) }} VNĐ</td>
+                                        <td class="text-end">{{ "{:,.0f}".format((detail[3]|int) * (detail[4]|float)) }} VNĐ</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end"><strong>Tổng Tiền:</strong></td>
+                                        <td class="text-end"><strong>{{ "{:,.0f}".format(total_amount) }} VNĐ</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div class="row mt-4 no-print">
+                            <div class="col-6">
+                                <button onclick="window.print()" class="btn btn-primary">
+                                    <i class="fas fa-print me-2"></i>In hóa đơn
+                                </button>
+                            </div>
+                            <div class="col-6 text-end">
+                                <a href="{{ url_for('customers') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <small class="text-muted">Cảm ơn quý khách đã mua hàng tại cửa hàng chúng tôi!</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <h3>Danh Sách Sản Phẩm</h3>
-        <div class="table-responsive">
-            <table class="table table-bordered product-table">
-                <thead class="table-light">
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên Sách</th>
-                        <th>Số Lượng</th>
-                        <th>Đơn Giá</th>
-                        <th>Thành Tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-    {% for detail in details %}
-    <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ detail[1] }}</td> <!-- Tên sách -->
-        <td class="text-center">{{ detail[3] }}</td> <!-- Số lượng -->
-        <td class="text-end">{{ "{:,.0f}".format(detail[4]|float|round(2)) }} VNĐ</td> <!-- Giá tiền -->
-         <td class="text-end">{{ "{:,.0f}".format((detail[3]|int) * (detail[4]|float)|round(2)) }} VNĐ</td> <!-- Thành tiền -->
-    {% endfor %}
-</tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <td colspan="4" class="text-end"><strong>Tổng Tiền:</strong></td>
-                        <td class="text-end"><strong>{{ "{:,.0f}".format(total_amount) }} VNĐ</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="row mt-4 no-print">
-    <!-- Nút In Hóa Đơn -->
-    <div class="col-md-6 text-start">
-        <button onclick="window.print()" class="btn btn-primary">
-            <i class="bi bi-printer"></i> In Hóa Đơn
-        </button>
     </div>
 
-    <!-- Nút Quay lại -->
-    <div class="col-md-6 text-end">
-        <a href="{{ url_for('customers') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i> Quay lại
-        </a>
-    </div>
-</div>
-
-
-        <div class="mt-4 text-center">
-            <small class="text-muted">Cảm ơn quý khách đã mua hàng tại cửa hàng chúng tôi!</small>
-        </div>
-    </div>
-
-    <script>
-        // Format currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND'
-            }).format(amount);
-        }
-
-        // Calculate total amount
-        document.addEventListener('DOMContentLoaded', function() {
-            let total = 0;
-            const rows = document.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                const quantity = parseInt(row.cells[2].textContent);
-                const price = parseFloat(row.cells[3].textContent.replace(/[^\d]/g, ''));
-                const subtotal = quantity * price;
-                total += subtotal;
-            });
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

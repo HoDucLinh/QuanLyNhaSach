@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết đơn hàng</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Chi Tiết Đơn Hàng Offline</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #343a40;
@@ -21,48 +21,74 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+.sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: var(--primary-color);
+        color: var(--text-light);
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        padding-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar a {
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        transform: translateX(5px);
+    }
+
+    .sidebar a.active {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .sidebar i {
+        width: 24px;
+        margin-right: 10px;
+        text-align: center;
+    }
+
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+
         .card {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border: none;
             border-radius: 12px;
             transition: transform 0.2s;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: var(--sidebar-width);
-            background-color: #343a40;
-            color: white;
-            padding-top: 20px;
-            z-index: 1000;
-        }
-
-        .sidebar a {
-            color: #d9d2e9;
-            padding: 12px 20px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-        .sidebar a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding-left: 25px;
-        }
-
-        .sidebar .active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .content {
-            margin-left: var(--sidebar-width);
-            padding: 20px;
         }
 
         .order-details {
@@ -85,17 +111,17 @@
         .status-badge {
             padding: 8px 15px;
             border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .status-pending {
-            background-color: #ffeeba;
-            color: #856404;
+            font-weight: bold;
         }
 
         .status-paid {
             background-color: #d4edda;
             color: #155724;
+        }
+
+        .status-pending {
+            background-color: #ffeeba;
+            color: #856404;
         }
 
         .status-cancelled {
@@ -113,77 +139,134 @@
         }
 
         .confirm-btn:hover {
-            background-color: #0056b3;
+            background-color: var(--hover-color);
             transform: translateY(-2px);
         }
 
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h4 class="text-center text-white mb-4">Bookstore Panel</h4>
+    <div class="sidebar no-print">
+      <h4 class="text-center text-white mb-4">Book Haven</h4>
+        <nav>
       <a href="{{ url_for('create_invoice')}}"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
       <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
       <a href="{{ url_for('customers')}}"><i class="fas fa-users me-2"></i>Customers</a>
-      <a href="{{ url_for('show_orders')}}"  class="active"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
+      <a href="{{ url_for('show_orders')}}" class="active"><i class="fas fa-shopping-cart me-2"></i>Orders</a>
       <a href="{{ url_for('logout_my_user')}}"><i class="fas fa-sign-out-alt me-2" ></i>Logout</a>
+        </nav>
     </div>
 
     <div class="content">
         <div class="container mt-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0 text-center">Chi tiết đơn hàng </h4>
+                    <h4 class="mb-0 text-center">Chi tiết đơn hàng</h4>
                 </div>
+
+                {% if err_msg %}
+                <div class="alert alert-danger">{{err_msg}}</div>
+                {% endif %}
+
                 <div class="card-body">
                     <div class="order-details">
                         <div class="row mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng</h5>
+                                <p class="mb-1"><strong>Mã đơn hàng:</strong> #{{ sale_invoice.id }}</p>
+                                <p class="mb-1"><strong>Ngày đặt hàng:</strong> {{ sale_invoice.orderDate }}</p>
+                                <p class="mb-1"><strong>Nhân viên bán hàng:</strong> Mua Online </p>
+                            </div>
+                            <div class="col-md-6">
                                 <h5><i class="fas fa-user me-2"></i>Thông tin khách hàng</h5>
                                 <p class="mb-1"><strong>Tên khách hàng:</strong> {{ sale_invoice.customer_name }}</p>
-                                <p class="mb-1"><strong>Ngày đặt hàng:</strong> {{ sale_invoice.orderDate }}</p>
                                 <p class="mb-1">
                                     <strong>Trạng thái:</strong>
-                                    <span class="status-badge
-                                    {% if sale_invoice.paymentStatus == 'Pending' %}status-pending
-                                    {% elif sale_invoice.paymentStatus == 'Cancelled' %}status-cancelled
-                                    {%else%} status-paid
-                                    {% endif %}">
+                                    <span class="status-badge {% if sale_invoice.paymentStatus == 'Pending' %}status-pending
+                                        {% elif sale_invoice.paymentStatus == 'Cancelled' %}status-cancelled
+                                        {% else %}status-paid{% endif %}">
                                         {{ sale_invoice.paymentStatus }}
                                     </span>
                                 </p>
                             </div>
                         </div>
 
-                        <h5 class="mb-3"><i class="fas fa-list me-2"></i>Chi tiết hóa đơn</h5>
-                        <div class="details-list">
-                            {% for detail in details %}
-                            <div class="detail-item">
-                                <div>
-                                    <h6 class="mb-1">{{ detail.book_name }}</h6>
-                                    <small class="text-muted">Số lượng: {{ detail.quantity }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <h6 class="mb-1">{{ "{:,.0f}".format(detail.price) }} VNĐ</h6>
-                                    <small class="text-muted">Thành tiền: {{ '{:,.0f}'.format(detail.price * detail.quantity) }} VNĐ</small>
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Tên Sách</th>
+                                        <th>Số Lượng</th>
+                                        <th>Đơn Giá</th>
+                                        <th>Thành Tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in details %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ detail[1] }}</td>
+                                        <td class="text-center">{{ detail[3] }}</td>
+                                        <td class="text-end">{{ "{:,.0f}".format(detail[4]|float) }} VNĐ</td>
+                                        <td class="text-end">{{ "{:,.0f}".format((detail[3]|int) * (detail[4]|float)) }} VNĐ</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end"><strong>Tổng Tiền:</strong></td>
+                                        <td class="text-end"><strong>{{ "{:,.0f}".format(total_amount) }} VNĐ</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
-
-                                </div>
-                            </div>
+                        {% if error_message %}
+                        <div class="alert alert-danger mt-3">
+                            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Không đủ số lượng sách trong kho!</h5>
+                            {% for error in error_message %}
+                            <p class="mb-1">- {{ error.book_name }}: Yêu cầu {{ error.requested }} quyển, chỉ còn {{ error.available }} quyển trong kho</p>
                             {% endfor %}
-                        </div>
-
-                        <div class="total-section mt-4">
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-6 offset-md-6">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <strong>Tổng tiền:</strong>
-                                        <span>{{ "{:,.0f}".format(total_amount) }} VNĐ</span>
-
+                            <div class="mt-3">
+                                <form method="POST" class="d-flex justify-content-center gap-2">
+                                    <button type="submit" name="action" value="proceed_with_available_quantity" class="btn btn-primary">
+                                        <i class="fas fa-shopping-cart me-2"></i>Mua với số lượng còn lại
+                                    </button>
+                                    <button type="submit" name="action" value="proceed_available" class="btn btn-warning">
+                                        <i class="fas fa-check-circle me-2"></i>Chỉ mua sách đủ số lượng
+                                    </button>
+                                    <button type="submit" name="action" value="cancel_order" class="btn btn-secondary">
+                                        <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng
+                                    </button>
+                                </form>
                             </div>
                         </div>
+                        {% endif %}
 
                         {% if sale_invoice.paymentStatus == 'Pending' %}
                         <div class="text-center mt-4">
@@ -194,27 +277,33 @@
                             </form>
                         </div>
                         {% elif sale_invoice.paymentStatus == 'Cancelled' %}
-                        <div class="alert alert-danger text-center mt-4" role="alert" style="background-color: #f8d7da; color: #721c24;">
-                            <i class="fa-solid fa-circle-xmark"></i>  Đơn hàng này đã bị hủy
+                        <div class="alert alert-danger text-center mt-4">
+                            <i class="fas fa-times-circle me-2"></i>Đơn hàng này đã bị hủy
                         </div>
                         {% elif sale_invoice.paymentStatus == 'Paid' %}
-                        <div class="alert alert-success text-center mt-4" role="alert" >
-                            <i class="fas fa-check-circle me-2"></i>Đơn hàng này đã được xử lý
+                        <div class="alert alert-success text-center mt-4">
+                            <i class="fas fa-check-circle me-2"></i>Đơn hàng này đã được thanh toán
                         </div>
                         {% endif %}
+
+                        <div class="row mt-4 no-print">
+                            <div class="col-6">
+                                <button onclick="window.print()" class="btn btn-primary">
+                                    <i class="fas fa-print me-2"></i>In hóa đơn
+                                </button>
+                            </div>
+                            <div class="col-6 text-end">
+                                <a href="{{ url_for('show_orders') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                        <!-- Nút Quay lại trang Orders -->
-                <div class="text-center mt-4">
-                 <a href="{{ url_for('show_orders') }}" class="btn btn-secondary">
-                 <i class="fas fa-arrow-left me-2"></i>Quay lại
-    </a>
-</div>
-
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
