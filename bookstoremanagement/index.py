@@ -133,37 +133,45 @@ def sale_employee_page():
 # Quản lý sách
 @app.route('/view-books', methods=['GET'])
 def view_books():
-    #Load toàn bộ danh mục và sách
-    books = dao.load_books()
+    # Load toàn bộ danh mục
     categories = dao.load_categories()
 
     # Lưu thể loại được chọn
     selected_category_name = None
 
-    # Lấy giá trị từ tham số
+    # Lấy giá trị từ tham số URL
     category_id = request.args.get('category_id', type=int)
-    keywords = request.args.get('search_book', '').lower().split()
+    keywords = request.args.get('search_book', '').strip().lower()
+
+    # Khởi tạo danh sách sách
+    books_query = Book.query
 
     # Lọc sách theo thể loại
     if category_id:
-        books = Book.query.filter_by(category_id=category_id).all()
+        books_query = books_query.filter_by(category_id=category_id)
         selected_category = Category.query.get(category_id)
         if selected_category:
             selected_category_name = selected_category.name
-    else:
-        books = Book.query.all()
 
     # Tìm sách theo từ khóa
     if keywords:
-        filtered_books = []
-        for book in books:
-            book_text = f"{book.name} {book.publisherName}".lower()
-            if all(keyword in book_text for keyword in keywords):
-                filtered_books.append(book)
-            books = filtered_books
+        keyword_list = keywords.split()
+        for keyword in keyword_list:
+            books_query = books_query.filter(
+                (Book.name.ilike(f"%{keyword}%")) |
+                (Book.publisherName.ilike(f"%{keyword}%"))
+            )
 
-    return render_template('view_books.html', books=books, categories=categories,
-                           selected_category_name=selected_category_name)
+    # Thực hiện truy vấn
+    books = books_query.all()
+
+    return render_template(
+        'view_books.html',
+        books=books,
+        categories=categories,
+        selected_category_name=selected_category_name
+    )
+
 
 
 # Tạo hóa đơn
