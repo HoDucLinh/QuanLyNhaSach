@@ -27,10 +27,10 @@
                                     <!-- Display the book image -->
                                     <img src="{{item.book.image}}"
                                          alt="{{ item.book.name }}" class="product-item">
-                                    <form action="{{ url_for('add_to_cart') }}" method="POST">
+                                    <form method="POST">
                                         <input type="hidden" name="book_id" value="{{ item.book.id }}">
                                         <!-- Hidden input with the book ID -->
-                                        <button type="submit" class="add-to-cart">Add to Cart</button>
+                                        <button type="button" class="add-to-cart" data-url="{{ url_for('add_to_cart') }}?book_id={{ item.book.id }}">Add to Cart</button>
                                     </form>
                                 </figure>
                                 <figcaption>
@@ -49,4 +49,31 @@
         </div>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Xử lý sự kiện click cho nút Add to Cart
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url; // Lấy URL từ data-url
+
+            // Gửi yêu cầu AJAX để xử lý
+            fetch(url, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message); // Hiển thị thông báo thành công
+                } else {
+                    alert(data.message); // Hiển thị thông báo lỗi
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

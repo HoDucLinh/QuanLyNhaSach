@@ -66,35 +66,61 @@
             position: fixed;
             top: 0;
             left: 0;
-            height: 100%;
             width: var(--sidebar-width);
-            background-color: var(--primary-color);
+            height: 100vh;
+            background: var(--primary-color);
             color: var(--text-light);
-            padding-top: 20px;
-            transition: transform 0.3s;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
             z-index: 1000;
+            padding-top: 20px;
         }
 
-        .sidebar a {
-            color: var(--accent-color);
-            padding: 12px 20px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
+        @media (max-width: 768px) {
+            .sidebar {
+            transform: translateX(-100%);
         }
 
-        .sidebar a:hover {
-            background-color: var(--secondary-color);
-            color: var(--text-light);
-            transform: translateX(5px);
-        }
+        .sidebar.active {
+            transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
 
-        .sidebar .active {
-            background-color: var(--primary-color);
-             color: var(--text-light);
-             border-left: 4px solid var(--accent-color);
-        }
+    .sidebar-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar a {
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        transform: translateX(5px);
+    }
+
+    .sidebar a.active {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .sidebar i {
+        width: 24px;
+        margin-right: 10px;
+        text-align: center;
+    }
 
         .content {
             margin-left: var(--sidebar-width);
@@ -159,7 +185,7 @@
 </head>
 <body>
     <div class="sidebar">
-        <h4 class="text-center text-white mb-4">Bookstore Panel</h4>
+      <h4 class="text-center text-white mb-4">Book Haven</h4>
       <a href="{{ url_for('create_invoice')}}" class="active"><i class="fas fa-plus-circle me-2"></i>Create New Order</a>
       <a href="{{ url_for('view_books')}}"><i class="fas fa-book me-2"></i>Books</a>
       <a href="{{ url_for('import_books')}}"><i class="fa-solid fa-file-import"></i> Update Book Storage</a>
@@ -190,7 +216,7 @@
                                 <label for="orderDate" class="form-label">
                                     <i class="fas fa-calendar me-2"></i>Ngày lập hóa đơn
                                 </label>
-                                <input type="date" class="form-control" id="orderDate" name="orderDate" required>
+                                <input class="form-control" id="orderDate" name="orderDate" required readonly>
                             </div>
                             <div class="col-md-4">
                                 <label for="employee" class="form-label">
@@ -268,20 +294,25 @@
             return bookItem;
         }
 
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function parsePrice(priceStr) {
+            return parseFloat(priceStr.replace(/,/g, ''));
+        }
+
         function updateTotals() {
             let total = 0;
             document.querySelectorAll('.book-item').forEach(item => {
-                const price = parseFloat(item.querySelector('.price-input').value.replace(/,/g, '')) || 0; // Lấy giá sau khi format
+                const priceInput = item.querySelector('.price-input').value;
+                const price = parsePrice(priceInput);
                 const quantity = parseInt(item.querySelector('.quantity-input').value) || 0;
-                total += price * quantity;
+                const lineTotal = price * quantity;
+                total += lineTotal;
             });
 
-            const vat = total * 0.1;
-            const finalTotal = total + vat;
-
-            document.getElementById('totalAmount').textContent = `${total.toLocaleString('vi-VN')} VNĐ`;
-            document.getElementById('vatAmount').textContent = `${vat.toLocaleString('vi-VN')} VNĐ`;
-            document.getElementById('finalAmount').textContent = `${finalTotal.toLocaleString('vi-VN')} VNĐ`;
+            document.getElementById('totalAmount').textContent = formatPrice(total) + ' VNĐ';
         }
 
         addItemBtn.addEventListener('click', function() {
@@ -303,9 +334,8 @@
                 const selectedOption = e.target.selectedOptions[0];
                 item.querySelector('.category-input').value = selectedOption.dataset.category;
 
-                // Lấy giá từ thuộc tính data-price và format lại
                 const price = parseFloat(selectedOption.dataset.price);
-                item.querySelector('.price-input').value = price.toLocaleString('vi-VN'); // Định dạng giá
+                item.querySelector('.price-input').value = formatPrice(price);
 
                 updateTotals();
             }
@@ -325,6 +355,5 @@
         document.getElementById('orderDate').value = today;
     });
 </script>
-
 </body>
 </html>

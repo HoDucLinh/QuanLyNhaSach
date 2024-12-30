@@ -28,7 +28,10 @@
                     </div>
 
                     <!-- Checkbox and Forgot password -->
-
+                    <div class="mb-3">
+                        <input type="checkbox" id="forgotPassword" name="forgotPassword" class="form-check-input">
+                        <label class="form-check-label" for="forgotPassword">Forgot Password?</label>
+                    </div>
                     <!-- Submit button -->
                     <div class="text-center text-lg-start mt-4 pt-2">
                         <button type="submit" class="btn btn-primary" style="padding-left: 2.5rem; padding-right: 2.5rem;">Login
@@ -41,4 +44,13 @@
             </div>
         </div>
     </div>
+<script>
+        // Kiểm tra nếu checkbox "Forgot Password?" được chọn
+        document.getElementById('forgotPassword').addEventListener('change', function() {
+            if (this.checked) {
+                // Nếu checkbox được chọn, chuyển hướng đến trang yêu cầu đặt lại mật khẩu
+                window.location.href = "{{ url_for('request_reset_password') }}";
+            }
+        });
+</script>
 {%endblock%}

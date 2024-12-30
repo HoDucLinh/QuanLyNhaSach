@@ -1,6 +1,6 @@
 import hashlib
-# from datetime import date, datetime
-from flask import json
+from datetime import date, datetime
+from flask import json, current_app
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
@@ -8,6 +8,7 @@ from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app, db
 from flask_login import UserMixin
 from datetime import datetime
+from itsdangerous import TimedSerializer as Serializer
 
 
 class UserRole(PyEnum):
@@ -38,6 +39,21 @@ class User(db.Model , UserMixin):
     stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
     #1 customer có thể có nhiều sách yêu thích
     favorites = relationship('Favorite', backref='customer', lazy=True)
+
+    def get_reset_token(self, expires_sec=1800):
+        # Tạo instance của Serializer mà không có expires_sec
+        s = Serializer(current_app.config['SECRET_KEY'])
+        # Trả về token dưới dạng chuỗi (không cần decode())
+        return s.dumps({'user_id': self.id, 'exp': expires_sec})
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
 
     def __str__(self):
         return self.name

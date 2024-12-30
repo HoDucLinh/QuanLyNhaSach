@@ -1,11 +1,12 @@
 import math
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
-from bookstoremanagement import app, dao, db, login
+from bookstoremanagement import app, dao, db, login, mail
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 from bookstoremanagement.tasks import init_scheduler
+from flask_mail import Message, Mail
 
 app.secret_key = "123456"
 
@@ -79,6 +80,11 @@ def user_login_page():
         username = request.form.get('username')
         password = request.form.get('password')
 
+        # Kiểm tra nếu người dùng chọn "Forgot Password"
+        if request.form.get('forgotPassword'):
+            return redirect(url_for('request_reset_password'))  # Chuyển đến trang yêu cầu đặt lại mật khẩu
+
+        # Xử lý đăng nhập nếu không phải quên mật khẩu
         user = dao.auth_user(username, password)
         if user:
             login_user(user)
@@ -133,32 +139,45 @@ def sale_employee_page():
 # Quản lý sách
 @app.route('/view-books', methods=['GET'])
 def view_books():
-    #Load toàn bộ danh mục và sách
-    books = dao.load_books()
+    # Load toàn bộ danh mục
     categories = dao.load_categories()
 
     # Lưu thể loại được chọn
     selected_category_name = None
 
-    # Lấy giá trị từ tham số
+    # Lấy giá trị từ tham số URL
     category_id = request.args.get('category_id', type=int)
-    search_book = request.args.get('search_book', '')
+    keywords = request.args.get('search_book', '').strip().lower()
+
+    # Khởi tạo danh sách sách
+    books_query = Book.query
 
     # Lọc sách theo thể loại
     if category_id:
-        books = Book.query.filter_by(category_id=category_id).all()
+        books_query = books_query.filter_by(category_id=category_id)
         selected_category = Category.query.get(category_id)
         if selected_category:
             selected_category_name = selected_category.name
-    else:
-        books = Book.query.all()
 
     # Tìm sách theo từ khóa
-    if search_book:
-        books = [book for book in books if search_book.lower() in book.name.lower()]
+    if keywords:
+        keyword_list = keywords.split()
+        for keyword in keyword_list:
+            books_query = books_query.filter(
+                (Book.name.ilike(f"%{keyword}%")) |
+                (Book.publisherName.ilike(f"%{keyword}%"))
+            )
 
-    return render_template('view_books.html', books=books, categories=categories,
-                           selected_category_name=selected_category_name)
+    # Thực hiện truy vấn
+    books = books_query.all()
+
+    return render_template(
+        'view_books.html',
+        books=books,
+        categories=categories,
+        selected_category_name=selected_category_name
+    )
+
 
 
 # Tạo hóa đơn
@@ -166,7 +185,6 @@ def view_books():
 def create_invoice():
     books = dao.load_books()
     err_msg = None
-    print(books)
     if request.method == 'POST':
         customer_name = request.form.get('customer_name')  # Lấy tên khách hàng từ form
         order_date = request.form.get('orderDate')  # Lấy ngày đặt hàng từ form
@@ -180,7 +198,7 @@ def create_invoice():
 
         # Kiểm tra số lượng sách mua
         for book_id, quantity in zip(book_ids,quantities):
-            book = dao.load_books(book_id==book_id)
+            book = dao.load_books(book_id)
             if book_id and int(quantity)>book.quantity:
                 err_msg = f"Số lượng sách '{book.name}' yêu cầu vượt quá số lượng tồn kho ({book.quantity})."
                 return render_template("create_invoice.html", books=books, err_msg=err_msg)
@@ -243,17 +261,17 @@ def import_books():
                     book = dao.load_books(book_id)
                     if book:
                         err_msg = f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity)
                 if not is_valid_min_quantity:
                     err_msg = f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 book = dao.load_books(book_id)
                 if not book:
                     err_msg = "Sách với ID {book_id} không tồn tại"
-                    break  # Dừng lại nếu có lỗi
+                    break
 
                 # Cập nhật số lượng sách
                 book.quantity += quantity
@@ -295,22 +313,89 @@ def show_orders():
 
 @app.route('/order_detail/<int:saleInvoice_id>', methods=['GET', 'POST'])
 def order_detail(saleInvoice_id):
-    # Lấy hóa đơn và chi tiết hóa đơn từ dao (giả sử bạn đã có phương thức `view_invoice` trong dao)
     sale_invoice, details, total_amount = dao.view_invoice(saleInvoice_id)
+    error_message = None
 
     if request.method == 'POST':
+        action = request.form.get('action')
         if sale_invoice.paymentStatus == 'Pending':
-            sale_invoice.paymentStatus = 'Paid'
-            # Cập nhật số lượng sách sau khi thanh toán
+            inventory_check = True
+            error_details = []
+            available_details = []
+            adjustable_details = []
+            new_total = 0
+
             for detail in details:
-                book_id = detail.book_id  # Lấy book_id từ chi tiết hóa đơn
-                quantity = detail.quantity  # Lấy số lượng sách từ chi tiết
-                dao.updateQuantityBook(book_id, quantity)  # Gọi hàm updateQuantityBook để cập nhật số lượng sách
-            db.session.commit()
-            return redirect(url_for('show_orders'))
+                book = dao.load_books(book_id=detail.book_id)
+                if book.quantity < detail.quantity:
+                    inventory_check = False
+                    error_details.append({
+                        'book_name': detail.book_name,
+                        'requested': detail.quantity,
+                        'available': book.quantity,
+                        'detail_id': detail.id
+                    })
+                    adjustable_details.append({
+                        'detail': DetailInvoice.query.get(detail.id),
+                        'available': book.quantity
+                    })
+                else:
+                    available_details.append(detail)
+                    new_total += detail.price * detail.quantity
 
-    return render_template('order_detail.html', sale_invoice=sale_invoice, details=details, total_amount=total_amount)
+            if inventory_check:
+                # Nếu tất cả sách đều có đủ số lượng
+                sale_invoice.paymentStatus = 'Paid'
+                for detail in details:
+                    dao.updateQuantityBook(detail.book_id, detail.quantity)
+                db.session.commit()
 
+            else:
+                if action == 'proceed_available':
+                    # Chỉ xử lý các sách có đủ số lượng
+                    sale_invoice.paymentStatus = 'Paid'
+                    sale_invoice.total_amount = new_total
+                    for detail in adjustable_details:
+                        if detail['detail']:
+                            db.session.delete(detail['detail'])
+                    for detail in available_details:
+                        dao.updateQuantityBook(detail.book_id, detail.quantity)
+                    db.session.commit()
+
+                elif action == 'proceed_with_available_quantity':
+                    # Xử lý tất cả sách với số lượng có sẵn
+                    sale_invoice.paymentStatus = 'Paid'
+                    new_total = 0
+                    # Cập nhật số lượng cho các sách có sẵn
+                    for detail in available_details:
+                        new_total += detail.price * detail.quantity
+                        dao.updateQuantityBook(detail.book_id, detail.quantity)
+
+                    # Cập nhật số lượng cho các sách không đủ số lượng
+                    for adj_detail in adjustable_details:
+                        detail = adj_detail['detail']
+                        available = adj_detail['available']
+                        if detail:
+                            detail.quantity = available  # Cập nhật số lượng mới
+                            new_total += detail.price * available
+                            dao.updateQuantityBook(detail.book_id, available)
+
+                    sale_invoice.total_amount = new_total
+                    db.session.commit()
+
+                elif action == 'cancel_order':
+                    sale_invoice.paymentStatus = 'Cancelled'
+                    for detail in details:
+                        db.session.delete(DetailInvoice.query.get(detail.id))
+                    db.session.commit()
+
+                error_message = error_details
+
+    return render_template('order_detail.html',
+                           sale_invoice=sale_invoice,
+                           details=details,
+                           total_amount=total_amount,
+                           error_message=error_message)
 
 @app.route('/customers', methods=['GET'])
 def customers():
@@ -393,13 +478,16 @@ def cart_page():
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
 
 
-@app.route('/add_to_cart', methods=['POST'])
+@app.route('/add_to_cart', methods=['GET'])
 def add_to_cart():
     # Lấy dữ liệu từ form
-    book_id = request.form.get('book_id')
+    book_id = request.args.get('book_id')
+    book = Book.query.filter_by(id = book_id).first()
 
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
+        if book.quantity <= 0:
+            return {'status': 'error', 'message': 'Sách đã hết!! Vui lòng chọn sách khác!'}, 401
         dao.insert_book_to_cart(user_id, book_id)
         return {'status': 'success', 'message': 'Thêm vào giỏ hàng thành công!'}
 
@@ -456,13 +544,26 @@ def update_quantity():
     new_quantity = int(request.form.get('quantity'))
     cart = Cart.query.filter_by(user_id=current_user.id).first()
 
-    # Tìm sản phẩm và cập nhật số lượng
+    # Tìm sách trong kho
+    book = Book.query.filter_by(id=book_id).first()
+    if not book:
+        return jsonify({'status': 'error', 'message': 'Sách không tồn tại.'}), 400
+
+    # Kiểm tra số lượng sách trong kho
+    if new_quantity > book.quantity:
+        return jsonify({
+            'status': 'error',
+            'message': f'Số lượng yêu cầu vượt quá số lượng sách trong kho ({book.quantity}).'
+        }), 400
+
+    # Tìm sản phẩm trong giỏ hàng và cập nhật số lượng
     cart_detail = CartDetail.query.filter_by(book_id=book_id, cart_id=cart.id).first()
     if cart_detail:
         cart_detail.quantity = new_quantity
         db.session.commit()
-    # Redirect về trang giỏ hàng
-    return redirect('/cart')
+        return jsonify({'status': 'success', 'message': 'Cập nhật số lượng thành công.'}), 200
+
+    return jsonify({'status': 'error', 'message': 'Không tìm thấy sản phẩm trong giỏ hàng.'}), 400
 
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
@@ -520,7 +621,6 @@ def edit_profile():
 
     # Phương thức GET: hiển thị form
     return render_template('editprofile.html')
-
 
 
 @app.route('/toggle_favorite', methods=['POST'])
@@ -702,6 +802,60 @@ def category_revenue_report():
                            stats=stats,
                            from_date=from_date,
                            to_date=to_date)
+
+
+# Hàm gửi email
+def send_email(recipient_email, subject, body):
+    msg = Message(subject, sender='holinh8241@gmail.com', recipients=[recipient_email])
+    msg.body = body
+    try:
+        mail.send(msg)
+        print("Email đã được gửi thành công.")
+    except Exception as e:
+        print(f"Không thể gửi email: {e}")
+
+# Route yêu cầu đặt lại mật khẩu (trang form nhập email)
+@app.route('/reset-password', methods=['GET', 'POST'])
+def request_reset_password():
+    alert_message = None  # Biến để chứa thông báo
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            alert_message = "Email không tồn tại."
+            return render_template('request_reset_password.html', alert_message=alert_message)
+
+        token = user.get_reset_token()  # Tạo token reset
+        reset_url = url_for('reset_password', token=token, _external=True)
+
+        # Gửi email reset mật khẩu
+        subject = "Reset Your Password"
+        body = f"Click the link to reset your password: {reset_url}"
+        send_email(user.email, subject, body)
+
+        alert_message = "Một email đã được gửi để bạn đặt lại mật khẩu."
+        return render_template('request_reset_password.html', alert_message=alert_message)
+
+    return render_template('request_reset_password.html')
+
+# Route để thay đổi mật khẩu
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    alert_message = None  # Biến để chứa thông báo
+    user = User.verify_reset_token(token)
+    if not user:
+        alert_message = "Token không hợp lệ hoặc đã hết hạn"
+        return redirect(url_for('request_reset_password', alert_message=alert_message))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        new_password = str(hashlib.md5(new_password.encode('utf-8')).hexdigest())
+        user.password = new_password  # Thay đổi mật khẩu người dùng
+        db.session.commit()
+        alert_message = "Mật khẩu đã được thay đổi thành công."
+        return redirect('/login')
+
+    return render_template('reset_password.html', alert_message=alert_message)  # Truyền thông báo vào template
 
 
 if __name__ == '__main__':

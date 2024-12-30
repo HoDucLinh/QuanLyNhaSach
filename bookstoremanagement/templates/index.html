@@ -29,7 +29,7 @@
                             <h2 class="banner-title">{{b.name}}</h2>
                             <p>{{b.description}}</p>
                             <div class="btn-wrap">
-                                <a href="#" class="btn btn-outline-accent btn-accent-arrow">Add to cart<i class="icon icon-ns-arrow-right"></i></a>
+                                <a href="{{ url_for('add_to_cart') }}?book_id={{ b.id }}" class="btn btn-outline-accent btn-accent-arrow">Add to cart<i class="icon icon-ns-arrow-right"></i></a>
                             </div>
                         </div><!--banner-content-->
                         <img src="{{b.image}}" alt="banner" class="banner-image img-fluid">
@@ -47,4 +47,32 @@
     </div>
 
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-outline-accent').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Ngăn chặn điều hướng trang
+                const url = this.href; // Lấy URL từ href của nút
+
+                // Gửi yêu cầu AJAX
+                fetch(url, {
+                    method: 'GET',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Hiển thị thông báo thành công
+                    } else {
+                        alert(data.message); // Hiển thị thông báo lỗi
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                });
+            });
+        });
+    });
+</script>
+
 {%endblock%}

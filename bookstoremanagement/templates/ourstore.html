@@ -44,10 +44,10 @@
                             {% for book in books %}
                             <div class="col-md-3">
                                 <div class="product-item">
-                                    <form method="POST">
+                                    <form method="GET">
                                         <figure class="product-style">
                                             <img src="{{ book.image }}" alt="{{ book.name }}" class="product-item">
-                                            <button type="submit" class="add-to-cart" data-book-id="{{ book.id }}">Add to Cart</button>
+                                            <button type="button" class="add-to-cart" data-url="{{ url_for('add_to_cart') }}?book_id={{ book.id }}">Add to Cart</button>
                                         </figure>
                                         <figcaption>
                                             <h3>{{ book.name }}</h3>
@@ -125,19 +125,15 @@
         });
     });
 });
-document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault(); // Ngăn chặn tải lại trang
-            const bookId = this.dataset.bookId; // Lấy ID sách từ thuộc tính data
+document.addEventListener('DOMContentLoaded', function() {
+    // Xử lý sự kiện click cho nút Add to Cart
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url; // Lấy URL từ data-url
 
-            fetch('/add_to_cart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    book_id: bookId,
-                }),
+            // Gửi yêu cầu AJAX để xử lý
+            fetch(url, {
+                method: 'GET'
             })
             .then(response => response.json())
             .then(data => {
@@ -153,5 +149,6 @@ document.querySelectorAll('.add-to-cart').forEach(button => {
             });
         });
     });
+});
 </script>
 {%endblock%}
