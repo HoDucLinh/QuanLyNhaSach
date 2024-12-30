@@ -1,6 +1,6 @@
 import hashlib
 from datetime import date, datetime
-from flask import json
+from flask import json, current_app
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
@@ -8,6 +8,7 @@ from sqlalchemy import Enum as SQLEnum
 from bookstoremanagement import app, db
 from flask_login import UserMixin
 from datetime import datetime
+from itsdangerous import TimedSerializer as Serializer
 
 
 class UserRole(PyEnum):
@@ -38,6 +39,21 @@ class User(db.Model , UserMixin):
     stock_invoices = relationship('StockInvoice' , backref='stockInvoice' , lazy=True)
     #1 customer có thể có nhiều sách yêu thích
     favorites = relationship('Favorite', backref='customer', lazy=True)
+
+    def get_reset_token(self, expires_sec=1800):
+        # Tạo instance của Serializer mà không có expires_sec
+        s = Serializer(current_app.config['SECRET_KEY'])
+        # Trả về token dưới dạng chuỗi (không cần decode())
+        return s.dumps({'user_id': self.id, 'exp': expires_sec})
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
 
     def __str__(self):
         return self.name
@@ -120,7 +136,8 @@ class SaleInvoice(db.Model):
     customer_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
     # lưu id của sale , neu null là mua onl ,neeseu có gia trị là mua off
     sale_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)
-    orderDate = db.Column(db.Date, default=datetime.now())
+    orderDate = db.Column(db.DateTime, default=datetime.now())
+
 
     def __str__(self):
         return f"SaleInvoice {self.id}, Customer {self.customer_name}, Status {self.paymentStatus}"
@@ -145,7 +162,7 @@ class Regulation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     min_import_quantity = db.Column(db.Integer, default=150)  # Số lượng nhập tối thiểu
     min_stock_before_import = db.Column(db.Integer, default=300)  # Số lượng tồn kho tối thiểu trước khi nhập
-    order_cancel_time = db.Column(db.Integer, default=48)  # Thời gian hủy đơn (giờ)
+    order_cancel_time = db.Column(db.Integer, default=2880)  # Thời gian hủy đơn (phút)
     updated_date = db.Column(db.DateTime, default=datetime.now())
     updated_by = db.Column(db.Integer, ForeignKey(User.id), nullable=False)
 
@@ -218,7 +235,7 @@ if __name__ == "__main__":
         sample_regulation = Regulation(
             min_import_quantity=150,
             min_stock_before_import=300,
-            order_cancel_time=48,
+            order_cancel_time=2,
             updated_date=datetime.now(),
             updated_by=3
         )

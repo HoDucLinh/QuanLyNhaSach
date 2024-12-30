@@ -4,8 +4,7 @@ import json
 from bookstoremanagement import db, app
 import hashlib
 from sqlalchemy import func
-from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole, \
-    Regulation, Favorite
+from bookstoremanagement.models import Book, Category, Cart, CartDetail, User, SaleInvoice, DetailInvoice, UserRole,Regulation, Favorite
 from sqlalchemy.sql import extract
 from datetime import datetime, timedelta
 import time
@@ -319,7 +318,7 @@ def check_order_cancellation():
 
     # Tìm các đơn hàng quá hạn
     overdue_orders = SaleInvoice.query.filter(
-        SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
+        SaleInvoice.orderDate <= datetime.now() - timedelta(minutes=cancel_time),
         SaleInvoice.paymentStatus == 'Pending'
     ).all()
 

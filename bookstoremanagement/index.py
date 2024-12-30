@@ -1,11 +1,12 @@
 import math
 from flask import render_template, request, redirect, session, url_for, jsonify, flash
 from sqlalchemy import func
-from bookstoremanagement import app, dao, db, login
+from bookstoremanagement import app, dao, db, login, mail
 from bookstoremanagement.models import Cart, CartDetail, Book, SaleInvoice, DetailInvoice
 from flask_login import login_user, current_user, logout_user, login_required
 import cloudinary.uploader
 from bookstoremanagement.tasks import init_scheduler
+from flask_mail import Message, Mail
 
 app.secret_key = "123456"
 
@@ -79,6 +80,11 @@ def user_login_page():
         username = request.form.get('username')
         password = request.form.get('password')
 
+        # Kiểm tra nếu người dùng chọn "Forgot Password"
+        if request.form.get('forgotPassword'):
+            return redirect(url_for('request_reset_password'))  # Chuyển đến trang yêu cầu đặt lại mật khẩu
+
+        # Xử lý đăng nhập nếu không phải quên mật khẩu
         user = dao.auth_user(username, password)
         if user:
             login_user(user)
@@ -472,13 +478,16 @@ def cart_page():
     return render_template('cart.html', books=books_in_cart, total_price=total_price)
 
 
-@app.route('/add_to_cart', methods=['POST'])
+@app.route('/add_to_cart', methods=['GET'])
 def add_to_cart():
     # Lấy dữ liệu từ form
-    book_id = request.form.get('book_id')
+    book_id = request.args.get('book_id')
+    book = Book.query.filter_by(id = book_id).first()
 
     if current_user.is_authenticated:  # Nếu không có user_id, yêu cầu đăng nhập
         user_id = current_user.id  # Lấy ID người dùng
+        if book.quantity <= 0:
+            return {'status': 'error', 'message': 'Sách đã hết!! Vui lòng chọn sách khác!'}, 401
         dao.insert_book_to_cart(user_id, book_id)
         return {'status': 'success', 'message': 'Thêm vào giỏ hàng thành công!'}
 
@@ -535,13 +544,26 @@ def update_quantity():
     new_quantity = int(request.form.get('quantity'))
     cart = Cart.query.filter_by(user_id=current_user.id).first()
 
-    # Tìm sản phẩm và cập nhật số lượng
+    # Tìm sách trong kho
+    book = Book.query.filter_by(id=book_id).first()
+    if not book:
+        return jsonify({'status': 'error', 'message': 'Sách không tồn tại.'}), 400
+
+    # Kiểm tra số lượng sách trong kho
+    if new_quantity > book.quantity:
+        return jsonify({
+            'status': 'error',
+            'message': f'Số lượng yêu cầu vượt quá số lượng sách trong kho ({book.quantity}).'
+        }), 400
+
+    # Tìm sản phẩm trong giỏ hàng và cập nhật số lượng
     cart_detail = CartDetail.query.filter_by(book_id=book_id, cart_id=cart.id).first()
     if cart_detail:
         cart_detail.quantity = new_quantity
         db.session.commit()
-    # Redirect về trang giỏ hàng
-    return redirect('/cart')
+        return jsonify({'status': 'success', 'message': 'Cập nhật số lượng thành công.'}), 200
+
+    return jsonify({'status': 'error', 'message': 'Không tìm thấy sản phẩm trong giỏ hàng.'}), 400
 
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
@@ -599,7 +621,6 @@ def edit_profile():
 
     # Phương thức GET: hiển thị form
     return render_template('editprofile.html')
-
 
 
 @app.route('/toggle_favorite', methods=['POST'])
@@ -665,7 +686,7 @@ def order():
                 paymentStatus="Pending",
                 customer_name=current_user.name,
                 customer_id=user_id,
-                orderDate=datetime.utcnow()
+                orderDate=datetime.now()
             )
             db.session.add(sale_invoice)
             db.session.commit()  # Lưu SaleInvoice để có ID
@@ -710,7 +731,7 @@ def callback():
             paymentStatus="Paid",
             customer_name=current_user.name,
             customer_id=user_id,
-            orderDate=datetime.utcnow()
+            orderDate=datetime.now()
         )
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
@@ -733,7 +754,7 @@ def callback():
             paymentStatus="Cancelled",
             customer_name=current_user.name,
             customer_id=user_id,
-            orderDate=datetime.utcnow()
+            orderDate=datetime.now()
         )
         db.session.add(sale_invoice)
         db.session.commit()  # Lưu SaleInvoice để có ID
@@ -781,6 +802,60 @@ def category_revenue_report():
                            stats=stats,
                            from_date=from_date,
                            to_date=to_date)
+
+
+# Hàm gửi email
+def send_email(recipient_email, subject, body):
+    msg = Message(subject, sender='holinh8241@gmail.com', recipients=[recipient_email])
+    msg.body = body
+    try:
+        mail.send(msg)
+        print("Email đã được gửi thành công.")
+    except Exception as e:
+        print(f"Không thể gửi email: {e}")
+
+# Route yêu cầu đặt lại mật khẩu (trang form nhập email)
+@app.route('/reset-password', methods=['GET', 'POST'])
+def request_reset_password():
+    alert_message = None  # Biến để chứa thông báo
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            alert_message = "Email không tồn tại."
+            return render_template('request_reset_password.html', alert_message=alert_message)
+
+        token = user.get_reset_token()  # Tạo token reset
+        reset_url = url_for('reset_password', token=token, _external=True)
+
+        # Gửi email reset mật khẩu
+        subject = "Reset Your Password"
+        body = f"Click the link to reset your password: {reset_url}"
+        send_email(user.email, subject, body)
+
+        alert_message = "Một email đã được gửi để bạn đặt lại mật khẩu."
+        return render_template('request_reset_password.html', alert_message=alert_message)
+
+    return render_template('request_reset_password.html')
+
+# Route để thay đổi mật khẩu
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    alert_message = None  # Biến để chứa thông báo
+    user = User.verify_reset_token(token)
+    if not user:
+        alert_message = "Token không hợp lệ hoặc đã hết hạn"
+        return redirect(url_for('request_reset_password', alert_message=alert_message))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        new_password = str(hashlib.md5(new_password.encode('utf-8')).hexdigest())
+        user.password = new_password  # Thay đổi mật khẩu người dùng
+        db.session.commit()
+        alert_message = "Mật khẩu đã được thay đổi thành công."
+        return redirect('/login')
+
+    return render_template('reset_password.html', alert_message=alert_message)  # Truyền thông báo vào template
 
 
 if __name__ == '__main__':
