@@ -247,6 +247,8 @@
                     </form>
                 </div>
             </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -354,6 +356,42 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('orderDate').value = today;
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const bookItems = document.getElementById('bookItems');
+
+    // Lắng nghe sự kiện thay đổi trên input số lượng
+    bookItems.addEventListener('input', function(event) {
+        if (event.target.classList.contains('quantity-input')) {
+            const quantityInput = event.target;
+            const bookSelect = quantityInput.closest('.book-item').querySelector('.book-select');
+            const bookId = bookSelect.value;
+            const quantity = parseInt(quantityInput.value, 10);
+
+            if (bookId && quantity > 0) {
+                fetch('/check-quantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        book_id: bookId,
+                        quantity: quantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        alert(data.message);
+                        quantityInput.value = 1; // Reset về giá trị hợp lệ
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    });
+});
+
 </script>
 </body>
 </html>

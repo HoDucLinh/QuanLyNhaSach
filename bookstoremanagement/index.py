@@ -196,13 +196,6 @@ def create_invoice():
         quantities = request.form.getlist('quantities[]')
         prices = request.form.getlist('prices[]')
 
-        # Kiểm tra số lượng sách mua
-        for book_id, quantity in zip(book_ids,quantities):
-            book = dao.load_books(book_id)
-            if book_id and int(quantity)>book.quantity:
-                err_msg = f"Số lượng sách '{book.name}' yêu cầu vượt quá số lượng tồn kho ({book.quantity})."
-                return render_template("create_invoice.html", books=books, err_msg=err_msg)
-
         # Tạo hóa đơn mới
         invoice = SaleInvoice(
             customer_name=customer_name,
@@ -229,6 +222,36 @@ def create_invoice():
         return redirect(url_for('view_invoice', saleInvoice_id=invoice.id))
     return render_template("create_invoice.html", books=books)
 
+# Kiem tra so luong sach mua
+@app.route('/check-quantity', methods=['POST'])
+def check_quantity():
+    try:
+        book_id = request.json.get('book_id')
+        input_quantity = request.json.get('quantity')
+
+        # Lấy thông tin sách từ cơ sở dữ liệu
+        book = Book.query.filter_by(id=book_id).first()
+        if book:
+            if input_quantity > book.quantity:
+                return jsonify({
+                    'status': 'error',
+                    'message': f"Số lượng nhập vượt quá số lượng tồn kho ({book.quantity})."
+                }), 400
+            else:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Số lượng hợp lệ.'
+                }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Sách không tồn tại.'
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 # Danh sách các hóa đơn
 @app.route('/invoice/view/<int:saleInvoice_id>', methods=['GET'])
@@ -239,7 +262,6 @@ def view_invoice(saleInvoice_id):
     # Trả về kết quả cho view (template)
     return render_template('view_invoice.html', saleInvoice_id=saleInvoice_id, sale_invoice=sale_invoice,
                            details=details, total_amount=total_amount)
-
 
 # Nhập sách vào kho
 @app.route('/import-book', methods=['GET', 'POST'])
@@ -255,22 +277,17 @@ def import_books():
             if book_id and quantity:
                 quantity = int(quantity)
 
+                book = dao.load_books(book_id)
                 # Kiểm tra điều kiện nhập hàng
                 is_valid, message = dao.check_import_conditions(book_id)
                 if not is_valid:
-                    book = dao.load_books(book_id)
                     if book:
-                        err_msg = f"Số lượng tồn ({book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
+                        err_msg = f"Số lượng tồn ({book.name} {book.quantity}) vẫn còn nhiều hơn mức cho phép nhập ({regulations.min_stock_before_import})"
                     break
 
                 is_valid_min_quantity, message_min_quantity = dao.check_min_import_quantity(quantity)
                 if not is_valid_min_quantity:
-                    err_msg = f"Số lượng nhập ({quantity}) phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
-                    break
-
-                book = dao.load_books(book_id)
-                if not book:
-                    err_msg = "Sách với ID {book_id} không tồn tại"
+                    err_msg = f"Số lượng nhập ({book.name})  phải lớn hơn hoặc bằng số lượng tối thiểu ({regulations.min_import_quantity})"
                     break
 
                 # Cập nhật số lượng sách
@@ -295,7 +312,31 @@ def import_books():
     books = dao.load_books()
     return render_template('import_book.html', books=books, err_msg=err_msg)
 
+#Kiem tra so luong nhap kho
+@app.route('/check-import', methods=['POST'])
+def check_import():
+    # Lấy dữ liệu từ form gửi lên
+    book_data = request.json  # Định dạng: [{'book_id': 1, 'quantity': 10}, ...]
+    errors = []
 
+    for item in book_data:
+        book_id = item.get('book_id')
+        quantity = item.get('quantity')
+
+        # Kiểm tra điều kiện tồn kho
+        is_valid_stock, stock_message = dao.check_import_conditions(book_id)
+        if not is_valid_stock:
+            errors.append({'book_id': book_id, 'message': stock_message})
+
+        # Kiểm tra điều kiện số lượng nhập
+        is_valid_quantity, quantity_message = dao.check_min_import_quantity(quantity)
+        if not is_valid_quantity:
+            errors.append({'book_id': book_id, 'message': quantity_message})
+
+    if errors:
+        return jsonify({'success': False, 'errors': errors}), 400
+
+    return jsonify({'success': True, 'message': 'Điều kiện nhập hàng hợp lệ!'})
 
 # Các đơn hàng Online và nhận tại Store
 @app.route('/orders')
