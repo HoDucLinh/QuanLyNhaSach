@@ -61,46 +61,30 @@
     <h2 class="text-center mb-4">Checkout</h2>
     <div class="row">
         <!-- Order Summary -->
-        <!-- Order Summary -->
         <div class="col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-header checkout-header">
                     <h5 class="mb-0">Order Summary</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                            <tr>
-                                <th>Book</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for b in books %}
-                            <tr>
-                                <td>{{ b.book.name }}</td>
-                                <td>{{ b.quantity }}</td>
-                                <td>{{ "{:,.0f}".format(b.book.price) }} VNĐ</td>
-                            </tr>
-                            {% endfor %}
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <td colspan="2" class="text-end"><strong>Subtotal:</strong></td>
-                                <td>{{ "{:,.0f}".format(totalAmount) }} VNĐ</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="text-end"><strong>Shipping:</strong></td>
-                                <td>0 VNĐ</td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="text-end fw-bold"><strong>Total:</strong></td>
-                                <td>{{ "{:,.0f}".format(totalAmount) }} VNĐ</td>
-                            </tr>
-                            </tfoot>
-                        </table>
+                    {% for b in books %}
+                    <p><strong>Book:</strong> {{ b.book.name }}</p>
+                    <p><strong>Quantity:</strong> {{ b.quantity }}</p>
+                    <p><strong>Price:</strong> {{ b.book.price }}</p>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <p><strong>Subtotal:</strong></p>
+                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
+
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p><strong>Shipping:</strong></p>
+                        <p>0</p>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <p><strong>Total:</strong></p>
+                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
                     </div>
                 </div>
             </div>
@@ -224,7 +208,6 @@ form.addEventListener('submit', function (event) {
         }
     }
 });
-
 </script>
 
 <!-- Bootstrap JS -->
