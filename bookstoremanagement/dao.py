@@ -318,7 +318,7 @@ def check_order_cancellation():
 
     # Tìm các đơn hàng quá hạn
     overdue_orders = SaleInvoice.query.filter(
-        SaleInvoice.orderDate <= datetime.now() - timedelta(hours=cancel_time),
+        SaleInvoice.orderDate <= datetime.now() - timedelta(minutes=cancel_time),
         SaleInvoice.paymentStatus == 'Pending'
     ).all()
 
