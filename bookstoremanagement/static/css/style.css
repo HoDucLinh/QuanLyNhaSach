@@ -1,18 +1,4 @@
-/*
-Theme Name: Booksaw BookStore Template
-Theme URI: https://templatesjungle.com/
-Author: TemplatesJungle
-Author URI: https://templatesjungle.com/
-Description: Booksaw is specially designed product packaged for Book Store by TemplateJungle.
-Version: 1.1
-*/
 
-/*--------------------------------------------------------------
-/* GENERAL STYLES
---------------------------------------------------------------*/
-/*--------------------------------------------------------------
-/** 1. VARIABLES
---------------------------------------------------------------*/
 :root {
     /* widths for rows and containers
        */
@@ -1849,15 +1835,22 @@ img.post-image {
     width: 100%;
     justify-content: center;
 }
-
+.banner-image {
+    width: 100%;
+    height: 300px; /* Chiều cao cố định */
+    object-fit: contain; /* Đảm bảo ảnh hiển thị đầy đủ mà không bị cắt */
+    border-radius: 10px; /* Tùy chọn */
+    display: block; /* Đảm bảo không bị inline spacing */
+    margin: 0 auto; /* Tùy chọn để căn giữa */
+}
 .main-slider .banner-content {
-    width: 35%;
+    width: 70%;
     margin-top: 60px;
     margin-right: 175px;
 }
 
 .banner-content h2.banner-title {
-    font-size: 4.5em;
+    font-size: 2 em;
     font-weight: 500;
     color: #222;
 }
@@ -2254,7 +2247,6 @@ span.prev-price {
 --------------------------------------------------------------*/
 #download-app {
     background: #EDEBE4;
-    padding: 120px 0;
     overflow: hidden;
     z-index: 0;
 }
@@ -2304,9 +2296,6 @@ footer#footer {
     margin-right: 100px;
 }
 
-#footer .footer-item img.footer-logo {
-    margin-bottom: 40px;
-}
 
 #footer .footer-item p {
     width: 80%;
@@ -2343,7 +2332,6 @@ footer#footer {
         margin-right: 0;
     }
 }
-
 /* Shop page */
 .products-grid {
     display: flex;
@@ -2353,7 +2341,10 @@ footer#footer {
 
 .product-style {
     position: relative;
+    width: 100%;
+    height: 300px;  /* Đặt chiều cao cố định cho sản phẩm */
     overflow: hidden;
+    margin-bottom: 25px; /* Khoảng cách giữa các sản phẩm */
 }
 
 .slick-slider .product-style {
@@ -2365,12 +2356,9 @@ footer#footer {
 }
 
 .product-style img.product-item {
-    position: relative;
-    background: #EFEEE8;
-    border: 1px solid #EAE8DF;
-    padding: 15%;
-    cursor: pointer;
-    width: 100%;
+    width: 100%;  /* Chiếm hết chiều rộng */
+    height: 100%; /* Chiếm hết chiều cao */
+    object-fit: cover; /* Đảm bảo ảnh phủ hết không gian mà không bị bóp méo */
 }
 
 .product-style button.add-to-cart {
@@ -2382,23 +2370,24 @@ footer#footer {
     text-transform: uppercase;
     text-align: center;
     line-height: 3;
-    bottom: 300px;
-    bottom: -65px;
+    bottom: -65px;  /* Đặt vị trí ban đầu ngoài khung sản phẩm */
     left: 0;
     z-index: 9;
-    transition: 0.3s ease-out;
+    opacity: 0;  /* Mặc định ẩn */
+    transition: 0.3s ease-out;  /* Hiệu ứng mượt mà */
 }
 
+/* Khi hover vào sản phẩm, nút "Add to Cart" sẽ hiện ra */
 .product-style:hover button.add-to-cart {
-    bottom: 380px;
-    bottom: 0;
+    bottom: 0;  /* Đưa nút lên vị trí dưới cùng */
+    opacity: 1;  /* Hiển thị nút */
 }
 
 .product-item figcaption {
-    margin-top: 30px;
-    margin-bottom: 30px;
+    margin-top: 15px;
     text-align: center;
 }
+
 
 .product-item figcaption > h3 {
     font-size: 1.4em;
@@ -2414,6 +2403,7 @@ footer#footer {
 .product-item .item-price {
     color: #74642F;
     font-size: 1.3em;
+    margin-top: 10px;
 }
 
 @media screen and (max-width: 768px) {
@@ -2439,6 +2429,7 @@ footer#footer {
         width: 100%;
     }
 }
+
 
 
 .sidebar {
@@ -2472,7 +2463,7 @@ footer#footer {
 .cart-table th, .cart-table td {
             padding: 15px;
             text-align: center;
-        }
+            }
 
         .cart-table {
             margin-top: 20px;
@@ -2507,5 +2498,35 @@ footer#footer {
         .cart-actions .btn {
             width: 48%;
         }
+.fas {
+    color: red;  /* Màu đỏ khi chọn trái tim */
+}
+
+.far {
+    color: #ccc;  /* Màu mặc định cho trái tim */
+}
+ /* dòng chữ trong index*/
+.animated-text {
+    font-size: 30px;
+    font-weight: bold;
+    color: #ff5733; /* Màu chữ nổi bật */
+    animation: fadeInMove 3s ease-in-out infinite;
+}
+
+@keyframes fadeInMove {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
 
 

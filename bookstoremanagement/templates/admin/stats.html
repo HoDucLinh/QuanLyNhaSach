@@ -1,0 +1,322 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+
+<!-- Header Section -->
+<div class="container-fluid py-4">
+<!--    <h1 class="custom-title">BOOK HAVEN</h1>-->
+
+<style>
+    .custom-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 4rem;
+        font-weight: bold;
+        text-align: center;
+        background: linear-gradient(90deg, #ff7eb3, #8e44ad, #3498db);
+        -webkit-background-clip: text;
+        color: transparent;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        animation: gradient-move 3s infinite;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
+    }
+
+    @keyframes gradient-move {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+</style>
+
+
+    <!-- Category Revenue Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">1. Thống kê doanh thu theo loại sách</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="text-end mb-3">
+                        <a href="{{ url_for('category_revenue_report',
+                                        kw=request.args.get('kw'),
+                                        from_date=request.args.get('from_date'),
+                                        to_date=request.args.get('to_date')) }}"
+                        class="btn btn-success">
+                            <i class="fas fa-file-export me-2"></i> Xuất báo cáo
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Mã loại</th>
+                                    <th>Tên loại sách</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in stats %}
+                                <tr>
+                                    <td>{{ s[0] }}</td>
+                                    <td>{{ s[1] }}</td>
+                                    <td class="text-end">
+                                        {% if s[2] %}
+                                            {{ "{:,.1f}".format(s[2]) }} VND
+                                        {% else %}
+                                            0 VND
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">Tìm kiếm theo tên</label>
+                                    <input type="text" class="form-control" name="kw" placeholder="Nhập từ khóa...">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Từ ngày</label>
+                                        <input type="date" class="form-control" name="from_date">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Đến ngày</label>
+                                        <input type="date" class="form-control" name="to_date">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i> Lọc
+                                </button>
+                            </form>
+                            <div class="mt-4">
+                                <canvas id="categoryChartId"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Book Sales Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">2. Thống kê số lượng sách bán ra</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <form class="mb-3">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Năm</label>
+                                        <input type="number" name="year" class="form-control"
+                                               value="{{ request.args.get('year', current_year) }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Tháng</label>
+                                        <select name="month" class="form-control">
+                                            <option value="">Tất cả các tháng</option>
+                                            {% for i in range(1, 13) %}
+                                            <option value="{{ i }}"
+                                                    {% if request.args.get('month')|int == i %}selected{% endif %}>
+                                                Tháng {{ i }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter me-2"></i> Lọc
+                                    </button>
+                                    <a href="{{ url_for('revenue_report',
+                                                       year=request.args.get('year'),
+                                                       month=request.args.get('month')) }}"
+                                       class="btn btn-success">
+                                        <i class="fas fa-file-export me-2"></i> Xuất báo cáo
+                                    </a>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th>Tháng</th>
+                                            <th>Tên sách</th>
+                                            <th class="text-end">Số lượng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s in book_stats %}
+                                        <tr>
+                                            <td>{{ s[0] }}</td>
+                                            <td>{{ s[1] }}</td>
+                                            <td class="text-end">{{ s[3] }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="BookQuantityChartId"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Revenue Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">3. Thống kê doanh thu theo tháng</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Tháng</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in month_stats %}
+                                <tr>
+                                    <td>Tháng {{ s[0] }}</td>
+                                    <td class="text-end">{{ "{:,.1f}".format(s[1]) }} VND</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="CateMonthChartId"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script>
+    // Your existing chart code here (unchanged)
+    let labels=[], labels2=[]
+    let info=[], info2=[]
+    let colors = [], colors2 =[]
+    let borderColors = [], borderColors2 = []
+    let r, g, b;
+
+    {% for s in stats %}
+    {% if s[2] %}
+        labels.push('{{ s[1] }}')
+        info.push({{ s[2] }})
+
+        r = Math.random() * 255;
+        g = Math.random() * 255;
+        b = Math.random() * 255;
+        colors.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
+        borderColors.push(`rgb(${r}, ${g}, ${b}, 1)`)
+    {% endif %}
+    {% endfor %}
+
+    {% for s in month_stats %}
+    labels2.push('Tháng ' + {{ s[0] }})  // Thêm chữ "Tháng" vào label
+    info2.push({{ s[1] }})
+
+    r = Math.random() * 255;
+    g = Math.random() * 255;
+    b = Math.random() * 255;
+    colors2.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
+    borderColors2.push(`rgb(${r}, ${g}, ${b}, 1)`)
+    {% endfor %}
+
+    let labels3 = [], info3 = []
+    let colors3 = [], borderColors3 = []
+
+    {% for s in book_stats %}
+        labels3.push('Tháng ' + {{ s[0] }} + ' - ' + '{{ s[1] }}')
+        info3.push({{ s[3] }})  // Chú ý: index thay đổi vì thêm cột thể loại
+
+        r = Math.random() * 255
+        g = Math.random() * 255
+        b = Math.random() * 255
+        colors3.push(`rgb(${r}, ${g}, ${b}, 0.5)`)
+        borderColors3.push(`rgb(${r}, ${g}, ${b}, 1)`)
+    {% endfor %}
+
+
+
+    window.onload = function() {
+        const ctx = document.getElementById("categoryChartId").getContext('2d')
+        const ctx2 = document.getElementById("CateMonthChartId").getContext('2d')
+        const ctx3 = document.getElementById("BookQuantityChartId").getContext('2d')
+
+        loadChart(ctx, labels, info, 'bar', colors, borderColors)
+        loadChart(ctx2, labels2, info2, 'line', colors2, borderColors2)
+        loadChart(ctx3, labels3, info3, 'doughnut', colors3, borderColors3)
+    }
+
+    // Cập nhật phần cấu hình biểu đồ
+function loadChart(ctx, labels, info, type, colors, borderColors) {
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Thống kê doanh thu",
+                data: info,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND'
+                            }).format(context.raw);
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+
+{% endblock %}

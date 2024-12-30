@@ -1,54 +1,78 @@
 {%extends 'layout/main.html'%}
-
+{%block title%}
+<title>Home</title>
+{%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/house.svg') }}" type="image/x-icon">
+{%endblock%}
 {%block content%}
-	<section id="billboard">
+<section id="billboard">
 
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
 
-					<button class="prev slick-arrow">
-						<i class="icon icon-arrow-left"></i>
-					</button>
+                <button class="prev slick-arrow">
+                    <i class="icon icon-arrow-left"></i>
+                </button>
 
-					<div class="main-slider pattern-overlay">
-						<div class="slider-item">
-							<div class="banner-content">
-								<h2 class="banner-title">Life of the Wild</h2>
-								<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu feugiat amet, libero
-									ipsum enim pharetra hac. Urna commodo, lacus ut magna velit eleifend. Amet, quis
-									urna, a eu.</p>
-								<div class="btn-wrap">
-									<a href="#" class="btn btn-outline-accent btn-accent-arrow">Read More<i
-											class="icon icon-ns-arrow-right"></i></a>
-								</div>
-							</div><!--banner-content-->
-							<img src="../static/images/main-banner1.jpg" alt="banner" class="banner-image">
-						</div><!--slider-item-->
+                <div class="main-slider pattern-overlay">
+                    {% if flag == 0 %}
+                    <div style="height:320px; display: flex; justify-content: center; align-items: center;">
+                        <p class="animated-text">CHÀO MỪNG CÁC BẠN ĐÃ ĐẾN VỚI BOOK HAVEN</p>
+                    </div>
 
-						<div class="slider-item">
-							<div class="banner-content">
-								<h2 class="banner-title">Birds gonna be Happy</h2>
-								<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu feugiat amet, libero
-									ipsum enim pharetra hac. Urna commodo, lacus ut magna velit eleifend. Amet, quis
-									urna, a eu.</p>
-								<div class="btn-wrap">
-									<a href="#" class="btn btn-outline-accent btn-accent-arrow">Read More<i
-											class="icon icon-ns-arrow-right"></i></a>
-								</div>
-							</div><!--banner-content-->
-							<img src="../static/images/main-banner2.jpg" alt="banner" class="banner-image">
-						</div><!--slider-item-->
+                    {% else %}
+                    {% for b in books %}
+                    <div class="slider-item">
+                        <div class="banner-content">
+                            <h2 class="banner-title">{{b.name}}</h2>
+                            <p>{{b.description}}</p>
+                            <div class="btn-wrap">
+                                <a href="{{ url_for('add_to_cart') }}?book_id={{ b.id }}" class="btn btn-outline-accent btn-accent-arrow">Add to cart<i class="icon icon-ns-arrow-right"></i></a>
+                            </div>
+                        </div><!--banner-content-->
+                        <img src="{{b.image}}" alt="banner" class="banner-image img-fluid">
+                    </div><!--slider-item-->
+                    {% endfor %}
+                    {% endif %}
+                </div><!--slider-->
 
-					</div><!--slider-->
+                <button class="next slick-arrow">
+                    <i class="icon icon-arrow-right"></i>
+                </button>
 
-					<button class="next slick-arrow">
-						<i class="icon icon-arrow-right"></i>
-					</button>
+            </div>
+        </div>
+    </div>
 
-				</div>
-			</div>
-		</div>
+</section>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-outline-accent').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Ngăn chặn điều hướng trang
+                const url = this.href; // Lấy URL từ href của nút
 
-	</section>
+                // Gửi yêu cầu AJAX
+                fetch(url, {
+                    method: 'GET',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Hiển thị thông báo thành công
+                    } else {
+                        alert(data.message); // Hiển thị thông báo lỗi
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                });
+            });
+        });
+    });
+</script>
+
 {%endblock%}

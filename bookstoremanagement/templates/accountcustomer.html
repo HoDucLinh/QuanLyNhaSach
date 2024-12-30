@@ -1,89 +1,176 @@
-{%extends 'layout/main.html'%}
+{% extends 'layout/main.html' %}
+{% block title %}
+<title>My Account</title>
+{% endblock %}
+{% block favicon %}
+<link rel="icon" href="{{ url_for('static', filename='images/person.svg') }}" type="image/x-icon">
+{% endblock %}
 
-{%block content%}
-<div class="sidebar">
-    <h3 class="text-center mb-4">Account Menu</h3>
-    <a href="#" class="active">
-        <i class="menu-icon fa fa-history"></i> Order History
-    </a>
-    <a href="#">
-        <i class="menu-icon fa fa-user"></i> Manage Profile
-    </a>
-    <a href="#">
-        <i class="menu-icon fa fa-heart"></i> Saved Items
-    </a>
-    <a href="#">
-        <i class="menu-icon fa fa-star"></i> Wishlist
-    </a>
-    <a href="#">
-        <i class="menu-icon fa fa-headset"></i> Support
-    </a>
-    <a href="#">
-        <i class="menu-icon fa fa-sign-out-alt"></i> Logout
-    </a>
-</div>
+{% block content %}
+<header class="mb-4">
+    <h1 class="text-center">Customer Information</h1>
+    <p class="text-center text-muted">Here you can find all your orders and favorite products.</p>
+</header>
 
 <!-- Main Content -->
-<div class="content">
-    <h2 class="menu-title mb-4">My Account</h2>
-
-    <div class="row g-4">
-        <!-- My Orders -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body d-flex align-items-center">
-                    <i class="menu-icon fa fa-shopping-cart text-primary fs-1 me-3"></i>
-                    <div>
-                        <h5 class="card-title">My Orders</h5>
-                        <p class="card-text mb-2">Check your order history and track current orders.</p>
-                        <a href="#" class="btn btn-primary btn-sm">View Orders</a>
-                    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <!-- Orders Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Customer Orders</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Details</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td>#{{ invoice.id }}</td>
+                            <td>{{ invoice.orderDate }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if invoice.paymentStatus == 'Paid' %}
+                                        bg-success
+                                    {% elif invoice.paymentSatus == 'Paid' %}
+                                        bg-warning
+                                    {% else %}
+                                        bg-danger
+                                    {% endif %}
+                                ">
+                                    {{ invoice.paymentStatus }}
+                                </span>
+                            </td>
+                            <td>{{ "{:,.0f}".format(invoice.totalAmount) }} VNĐ</td>
+                            <!-- Button to trigger modal -->
+                            <td><button class="btn" data-bs-toggle="modal" data-bs-target="#orderDetailsModal-{{ invoice.id }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </button></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">You have no orders yet.</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Edit Profile -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body d-flex align-items-center">
-                    <i class="menu-icon fa fa-user text-primary fs-1 me-3"></i>
-                    <div>
-                        <h5 class="card-title">Edit Profile</h5>
-                        <p class="card-text mb-2">Update your account information and preferences.</p>
-                        <a href="#" class="btn btn-primary btn-sm">Edit Profile</a>
-                    </div>
+        <!-- Favorite Products Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Favorite Products</h5>
                 </div>
-            </div>
-        </div>
-
-        <!-- Wishlist -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body d-flex align-items-center">
-                    <i class="menu-icon fa fa-star text-primary fs-1 me-3"></i>
-                    <div>
-                        <h5 class="card-title">My Wishlist</h5>
-                        <p class="card-text mb-2">Browse and manage your favorite books.</p>
-                        <a href="#" class="btn btn-primary btn-sm">View Wishlist</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact Support -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body d-flex align-items-center">
-                    <i class="menu-icon fa fa-headset text-primary fs-1 me-3"></i>
-                    <div>
-                        <h5 class="card-title">Contact Support</h5>
-                        <p class="card-text mb-2">Need help? Reach out to our support team.</p>
-                        <a href="#" class="btn btn-primary btn-sm">Get Support</a>
-                    </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for book in favorites %}
+                        <tr>
+                            <td>{{ book.name }}</td>
+                            <td>{{ book.category.name }}</td>
+                            <td>{{ "{:,.0f}".format(book.price) }} VNĐ</td>
+                            <td>
+                                <form method="GET" class="d-inline">
+                                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                                    <button type="submit" class="btn add-to-cart" data-url="{{ url_for('add_to_cart') }}?book_id={{ book.id }}" style="margin-top:0"><i class="bi bi-cart"></i></button>
+                                </form>
+                                <form action="/delete_from_favorite" method="POST" class="d-inline">
+                                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                                    <button type="submit" class="btn" style="margin-top:0"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- Modal to show order details -->
+{% for invoice in invoices %}
+<div class="modal fade" id="orderDetailsModal-{{ invoice.id }}" tabindex="-1" aria-labelledby="orderDetailsModalLabel-{{ invoice.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel-{{ invoice.id }}">Order Details - #{{ invoice.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5>Order Date: {{ invoice.orderDate }}</h5>
+                <h6>Payment Status: {{ invoice.paymentStatus }}</h6>
+                <h6>Total Amount: {{ "{:,.0f}".format(invoice.totalAmount) }} VNĐ</h6>
+                <hr>
+                <h5>Items in Order:</h5>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for detail in invoice_details[invoice.id] %}
+                    <tr>
+                        <td>{{ detail.book.name }}</td> <!-- Truy cập tên sách -->
+                        <td>{{ detail.quantity }}</td>
+                        <td>{{ "{:,.0f}".format(detail.book.price) }} VNĐ</td> <!-- Truy cập giá sách -->
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý sự kiện click cho nút Add to Cart
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const url = this.dataset.url; // Lấy URL từ data-url
 
-{%endblock%}
+                // Gửi yêu cầu AJAX để xử lý
+                fetch(url, {
+                    method: 'GET'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Hiển thị thông báo thành công
+                    } else {
+                        alert(data.message); // Hiển thị thông báo lỗi
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi thêm vào giỏ hàng.');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

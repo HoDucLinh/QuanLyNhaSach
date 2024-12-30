@@ -1,92 +1,98 @@
 {% extends 'layout/main.html' %}
-
+{%block title%}
+<title>My Cart</title>
+{%endblock%}
+{%block favicon%}
+<link rel="icon" href="{{ url_for('static', filename='images/cart3.svg') }}" type="image/x-icon">
+{%endblock%}
 {% block content %}
 <!-- Cart content -->
 <div class="container my-5" id="download-app">
-    <h2>Giỏ hàng của bạn</h2>
-
-    <!-- Cart table -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert alert-info">
+        {% for category, message in messages %}
+        <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <table class="table table-bordered cart-table">
         <thead>
-            <tr>
-                <th>Sách</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th>Tổng cộng</th>
-            </tr>
+        <tr>
+            <th>Sách</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Tổng cộng</th>
+            <th>Hành động</th>
+        </tr>
         </thead>
         <tbody>
-            <!-- Product 1 -->
-            <tr>
-                <td>Công nghệ lập trình Python</td>
-                <td class="price">250000 VND</td>
-                <td>
-                    <input type="number" name="quantity" value="1" min="1" max="10" class="quantity" data-price="250000" style="width: 50px;">
-                </td>
-                <td class="total">250000 VND</td>
-                <td>
-                    <form method="POST" action="/remove_from_cart">
-                        <input type="hidden" name="book_id" value="1">
-                        <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
-                    </form>
-                </td>
-            </tr>
+        {% for item in books %}
+        <tr>
+            <td>
+                <strong>{{ item.name }}</strong><br>
+                <small>{{ item.description }}</small>
+            </td>
+            <td class="price">{{ "{:,.0f}".format(item.price) }} VNĐ</td>
+            <td>
+                <!-- Form cập nhật số lượng -->
+                <form method="POST" action="/update_quantity" class="update-quantity-form">
+                    <input type="hidden" name="book_id" value="{{ item.book_id }}">
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
+                           class="quantity" data-price="{{ item.price }}" style="width: 50px;">
+                </form>
+            </td>
 
-            <!-- Product 2 -->
-            <tr>
-                <td>Hướng dẫn học máy cơ bản</td>
-                <td class="price">300000 VND</td>
-                <td>
-                    <input type="number" name="quantity" value="2" min="1" max="10" class="quantity" data-price="300000" style="width: 50px;">
-                </td>
-                <td class="total">600000 VND</td>
-                <td>
-                    <form method="POST" action="/remove_from_cart">
-                        <input type="hidden" name="book_id" value="2">
-                        <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
-                    </form>
-                </td>
-            </tr>
+            <td class="total">{{ "{:,.0f}".format(item.total) }} VNĐ</td>
+            <td>
+                <form method="POST" action="/remove_from_cart">
+                    <input type="hidden" name="book_id" value="{{ item.book_id }}">
+                    <button class="btn" type="submit" style="height:5px"><i class="bi bi-trash3"></i></button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
         </tbody>
     </table>
 
-    <!-- Cart Summary -->
-    <div class="cart-summary">
-        <h4 id="total-price">Tổng cộng: 850000 VND</h4>
-        <div class="cart-actions">
-            <button class="btn btn-success" type="submit">Thanh toán</button>
-        </div>
+    <!-- Display total price -->
+    <div class="total-price">
+        <h3>Tổng cộng: {{ "{:,.0f}".format(total_price) }} VNĐ</h3>
     </div>
+    <div class="checkout">
+        <form method="POST" action="/payment">
+            <button class="btn btn-success btn-lg">Thanh toán</button>
+        </form>
+    </div>
+
 </div>
-
 <script>
-    // Lấy tất cả các ô nhập số lượng và tổng cộng
-    const quantities = document.querySelectorAll('.quantity');
-    const totals = document.querySelectorAll('.total');
-    const totalPriceElement = document.getElementById('total-price');
+    document.querySelectorAll('.update-quantity-form .quantity').forEach(input => {
+        input.addEventListener('change', function () {
+            const form = this.closest('form');
+            const formData = new FormData(form);
 
-    // Cập nhật giá mỗi khi số lượng thay đổi
-    quantities.forEach((quantity, index) => {
-        quantity.addEventListener('input', function () {
-            const price = parseInt(this.getAttribute('data-price')); // Lấy giá của sản phẩm
-            const quantityValue = parseInt(this.value); // Lấy số lượng người dùng nhập
-            const total = price * quantityValue; // Tính tổng cộng cho sản phẩm
-
-            totals[index].innerText = total + ' VND'; // Cập nhật tổng cộng của sản phẩm
-
-            // Cập nhật tổng cộng giỏ hàng
-            updateCartTotal();
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload(); // Reload lại trang để cập nhật giỏ hàng
+                }
+                else{
+                    alert(data.message)
+                }
+            })
+            .catch(error => {
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                console.error('Error:', error);
+            });
         });
     });
-
-    // Cập nhật tổng cộng giỏ hàng
-    function updateCartTotal() {
-        let totalCart = 0;
-        totals.forEach(total => {
-            totalCart += parseInt(total.innerText.replace(' VND', ''));
-        });
-        totalPriceElement.innerText = 'Tổng cộng: ' + totalCart + ' VND';
-    }
 </script>
 
 {% endblock %}
+
