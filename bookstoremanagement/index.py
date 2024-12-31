@@ -116,6 +116,10 @@ def register_page():
             name = request.form.get('name')
             username = request.form.get('username')
             email = request.form.get('email')
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                msg = "Email đã tồn tại. Vui lòng sử dụng email khác."
+                return render_template("register.html", err_msg=msg)
             avatar_path = None
             if avatar:
                 res = cloudinary.uploader.upload(avatar)
