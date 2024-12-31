@@ -633,9 +633,13 @@ def edit_profile():
             updated = True
 
         # Kiểm tra và cập nhật email
-        if email and email != current_user.email:
-            current_user.email = email
-            updated = True
+        if email != current_user.email:
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                flash("Email đã tồn tại.")
+            else :
+                current_user.email = email
+                updated = True
 
         # Kiểm tra và cập nhật mật khẩu
         if old_password and new_password:
@@ -661,8 +665,6 @@ def edit_profile():
         if updated:
             db.session.commit()
             flash("Cập nhật thành công.", "success")
-        else:
-            flash("Không có thay đổi nào được thực hiện.", "info")
 
     # Phương thức GET: hiển thị form
     return render_template('editprofile.html')
