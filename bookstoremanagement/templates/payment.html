@@ -67,25 +67,40 @@
                     <h5 class="mb-0">Order Summary</h5>
                 </div>
                 <div class="card-body">
-                    {% for b in books %}
-                    <p><strong>Book:</strong> {{ b.book.name }}</p>
-                    <p><strong>Quantity:</strong> {{ b.quantity }}</p>
-                    <p><strong>Price:</strong> {{ b.book.price }}</p>
-                    {% endfor %}
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <p><strong>Subtotal:</strong></p>
-                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
-
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <p><strong>Shipping:</strong></p>
-                        <p>0</p>
-                    </div>
-                    <div class="d-flex justify-content-between fw-bold">
-                        <p><strong>Total:</strong></p>
-                        <p>{{ "{:,.0f}".format(totalAmount) }} VNĐ</p>
-                    </div>
+                    <table class="table table-bordered">
+                        <thead class="table-primary">
+                        <tr>
+                            <th>Book</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for b in books %}
+                        <tr>
+                            <td>{{ b.book.name }}</td>
+                            <td>{{ b.quantity }}</td>
+                            <td>{{ "{:,.0f}".format(b.book.price) }} VNĐ</td>
+                            <td>{{ "{:,.0f}".format(b.book.price * b.quantity) }} VNĐ</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td>{{ "{:,.0f}".format(totalAmount) }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Shipping:</strong></td>
+                            <td>0 VNĐ</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td>{{ "{:,.0f}".format(totalAmount) }} VNĐ</td>
+                        </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
         </div>
