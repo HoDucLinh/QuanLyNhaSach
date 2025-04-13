@@ -6,7 +6,7 @@ from bookstoremanagement.models import *
 from flask_login import current_user, logout_user
 from flask import redirect, url_for
 from wtforms import SelectField, PasswordField, validators
-import dao
+from bookstoremanagement import dao
 from flask import request
 from datetime import datetime
 import requests
