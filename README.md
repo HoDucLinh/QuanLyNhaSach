@@ -7,15 +7,17 @@ Dự án **Quản Lý Nhà Sách** là một ứng dụng web giúp quản lý h
 
 - Quản lý thông tin sách: thêm, sửa, xóa sách.
 - Quản lý khách hàng: lưu trữ và cập nhật thông tin khách hàng.
+- Nhập kho sách
 - Xử lý đơn hàng: tạo và quản lý đơn hàng bán sách.
 - Báo cáo doanh thu: thống kê doanh thu theo ngày, tháng, năm.
+- Thanh toán đơn hàng qua Zalo Pay
 - Giao diện người dùng thân thiện và dễ sử dụng.
 
 ## 🛠️ Công Nghệ Sử Dụng
 
 - **Backend**: Python, Flask  
 - **Frontend**: HTML, CSS, JavaScript  
-- **Cơ sở dữ liệu**: SQLite (có thể nâng cấp lên PostgreSQL hoặc MySQL)  
+- **Cơ sở dữ liệu**: MySQL  
 - **Thư viện**: Flask, SQLAlchemy, Jinja2
 
 ## 📂 Cấu Trúc Thư Mục
@@ -70,9 +72,9 @@ Hình ảnh bên dưới mô tả mô hình thực thể quan hệ (ERD) của h
 ![ERD Diagram](bookstoremanagement/bookstore.png)
 
 ## 👨‍💻 Tác Giả
-HoDucLinh - hoduclinh080204@gmail.com
-nguyenhung18
-Nguyễn Quang Khánh
+- HoDucLinh - hoduclinh080204@gmail.com
+- nguyenhung18
+- Nguyễn Quang Khánh
 
 ## 📌 Ghi Chú
 - Dự án hiện đang trong quá trình phát triển và có thể chưa đầy đủ tính năng.
