@@ -19,7 +19,7 @@ Dự án **Quản Lý Nhà Sách** là một ứng dụng web giúp quản lý h
 - **Thư viện**: Flask, SQLAlchemy, Jinja2
 
 ## 📂 Cấu Trúc Thư Mục
-
+```
 QuanLyNhaSach/
 ├── bookstoremanagement/   # Thư mục chính chứa mã nguồn
 │   ├── data/              # Tệp tĩnh: chứa data mẫu
@@ -33,24 +33,34 @@ QuanLyNhaSach/
 │   ├── index.py           # Định nghĩa các route
 ├── requirements.txt       # Danh sách các gói phụ thuộc
 └── README.md              # Tệp hướng dẫn 
-
+```
 ## ⚙️ Cài Đặt và Chạy Ứng Dụng
 
 1. **Clone** dự án:
+
 ```bash
 git clone https://github.com/HoDucLinh/QuanLyNhaSach.git
 cd QuanLyNhaSach
 ```
 
 2. **Tạo và kích hoạt môi trường ảo**:
+
+```bash
 python -m venv venv
 source venv/bin/activate  # Trên Windows: venv\Scripts\activate
+```
 
 3. **Cài đặt các gói phụ thuộc**:
+
+```bash
 pip install -r requirements.txt
+```
 
 4. **Chạy ứng dụng**:
+
+```bash
 flask run
+```
 
 5. Mở trình duyệt và truy cập: http://localhost:5000
 
